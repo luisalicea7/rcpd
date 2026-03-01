@@ -3,12 +3,14 @@ import { deleteCookie } from "hono/cookie";
 import { redis } from "../config/redis.js";
 import { config } from "../config/index.js";
 import { keyIndexKey, trackSessionKey } from "../utils/session-keys.js";
+import { requireSessionId } from "../utils/session-context.js";
 
 const consentRoutes = new Hono();
 
 consentRoutes.get("/status", async (c) => {
-  const sessionId = c.get("sessionId");
-  const consent = await redis.get(`session:${sessionId}:consent`);
+  const session = requireSessionId(c);
+  if (session instanceof Response) return session;
+  const consent = await redis.get(`session:${session}:consent`);
 
   return c.json({
     consent: consent === "granted" ? "granted" : "pending",
@@ -16,11 +18,12 @@ consentRoutes.get("/status", async (c) => {
 });
 
 consentRoutes.post("/grant", async (c) => {
-  const sessionId = c.get("sessionId");
-  const consentKey = `session:${sessionId}:consent`;
+  const session = requireSessionId(c);
+  if (session instanceof Response) return session;
+  const consentKey = `session:${session}:consent`;
 
   await redis.set(consentKey, "granted", "EX", config.SESSION_TTL);
-  await trackSessionKey(sessionId, consentKey);
+  await trackSessionKey(session, consentKey);
 
   return c.json({
     ok: true,
@@ -30,17 +33,18 @@ consentRoutes.post("/grant", async (c) => {
 });
 
 consentRoutes.post("/revoke", async (c) => {
-  const sessionId = c.get("sessionId");
-  const index = keyIndexKey(sessionId);
+  const session = requireSessionId(c);
+  if (session instanceof Response) return session;
+  const index = keyIndexKey(session);
 
   const indexedKeys = await redis.smembers(index);
   const baselineKeys = [
-    `session:${sessionId}:consent`,
-    `session:${sessionId}:data`,
+    `session:${session}:consent`,
+    `session:${session}:data`,
     index,
-    `profile:${sessionId}`,
-    `cart:${sessionId}`,
-    `actions:${sessionId}`,
+    `profile:${session}`,
+    `cart:${session}`,
+    `actions:${session}`,
   ];
 
   const keysToDelete = Array.from(new Set([...indexedKeys, ...baselineKeys]));
