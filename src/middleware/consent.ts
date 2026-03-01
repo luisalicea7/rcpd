@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { redis } from "../config/redis.js";
 import { requireSessionId } from "../utils/session-context.js";
+import { logger } from "../utils/logger.js";
 
 export const requireConsent = createMiddleware(async (c, next) => {
   const session = requireSessionId(c);
@@ -9,7 +10,12 @@ export const requireConsent = createMiddleware(async (c, next) => {
   let consent: string | null;
   try {
     consent = await redis.get(`session:${session}:consent`);
-  } catch {
+  } catch (err) {
+    logger.error(
+      { err, sessionId: session, path: c.req.path },
+      "Redis unavailable during consent check",
+    );
+
     return c.json(
       {
         error: "Service unavailable",
