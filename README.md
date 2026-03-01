@@ -1,15 +1,80 @@
-# backend
+# RPD Backend (Scaffold)
 
-To install dependencies:
+Event-driven personalization backend using Hono + Redis.
+
+## Package manager
+
+This repo is **Bun-first**.
+
+## Quick start
+
+1. Copy env:
+
+```bash
+cp .env.example .env
+```
+
+2. Configure Redis URL in `.env`.
+
+You can use either:
+- Local Redis: `redis://localhost:6379`
+- Cloud Redis: `rediss://<user>:<password>@<host>:<port>`
+
+If using local Redis via Docker:
+
+```bash
+docker compose up -d redis
+```
+
+3. Install deps + run dev server:
 
 ```bash
 bun install
+bun run dev
 ```
 
-To run:
+Server runs on `http://localhost:3000` by default.
+
+## Implemented in this phase
+
+- App bootstrap (`src/app.ts`, `src/index.ts`)
+- Health endpoint: `GET /health`
+- Session cookie middleware (`rpd_session`)
+- Consent endpoints:
+  - `GET /api/consent/status`
+  - `POST /api/consent/grant`
+  - `POST /api/consent/revoke`
+- Sliding TTL refresh for session keys
+- Session-owned key index for deterministic revoke cleanup (`session:{id}:keys`)
+
+## Manual test flow
 
 ```bash
-bun run index.ts
+# 1) Health
+curl -i http://localhost:3000/health
+
+# 2) Check consent status (stores cookie)
+curl -i -c cookies.txt http://localhost:3000/api/consent/status
+
+# 3) Grant consent
+curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/consent/grant
+
+# 4) Verify status now granted
+curl -i -b cookies.txt http://localhost:3000/api/consent/status
+
+# 5) Revoke and cleanup
+curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/consent/revoke
 ```
 
-This project was created using `bun init` in bun v1.3.6. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Optional Redis checks:
+
+For local Redis:
+```bash
+docker exec -it rcpd-redis-1 redis-cli
+# then inspect keys
+KEYS session:*
+TTL session:<id>:consent
+SMEMBERS session:<id>:keys
+```
+
+For cloud Redis, use your provider dashboard/inspector or connect with redis-cli using your TLS URL.
