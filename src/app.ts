@@ -15,11 +15,11 @@ app.use(
   }),
 );
 
-app.use("*", sessionMiddleware);
-
 app.get("/health", (c) => {
   return c.json({ status: "ok" });
 });
+
+app.use("*", sessionMiddleware);
 
 app.route("/api/consent", consentRoutes);
 

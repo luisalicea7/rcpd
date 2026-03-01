@@ -11,7 +11,6 @@ consentRoutes.get("/status", async (c) => {
   const consent = await redis.get(`session:${sessionId}:consent`);
 
   return c.json({
-    sessionId,
     consent: consent === "granted" ? "granted" : "pending",
   });
 });
@@ -60,4 +59,4 @@ consentRoutes.post("/revoke", async (c) => {
   });
 });
 
-export { consentRoutes, trackSessionKey, keyIndexKey };
+export { consentRoutes };
