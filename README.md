@@ -14,7 +14,13 @@ This repo is **Bun-first**.
 cp .env.example .env
 ```
 
-2. Start Redis (Docker):
+2. Configure Redis URL in `.env`.
+
+You can use either:
+- Local Redis: `redis://localhost:6379`
+- Cloud Redis: `rediss://<user>:<password>@<host>:<port>`
+
+If using local Redis via Docker:
 
 ```bash
 docker compose up -d redis
@@ -62,6 +68,7 @@ curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/consent/
 
 Optional Redis checks:
 
+For local Redis:
 ```bash
 docker exec -it rcpd-redis-1 redis-cli
 # then inspect keys
@@ -69,3 +76,5 @@ KEYS session:*
 TTL session:<id>:consent
 SMEMBERS session:<id>:keys
 ```
+
+For cloud Redis, use your provider dashboard/inspector or connect with redis-cli using your TLS URL.
