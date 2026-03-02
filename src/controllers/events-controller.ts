@@ -4,27 +4,33 @@ import { publishEvent } from "../services/event-producer.js";
 import { getProductById } from "../services/product-service.js";
 import { EventType, type ProductViewEvent } from "../types/events.js";
 import { logger } from "../utils/logger.js";
+import { requireSessionId } from "../utils/session-context.js";
+
+function invalidEventResponse(c: Context, details?: unknown): Response {
+  return c.json(
+    {
+      error: "Invalid event payload",
+      code: "INVALID_EVENT",
+      ...(details ? { details } : {}),
+    },
+    400,
+  );
+}
 
 export async function createProductViewEventHandler(c: Context): Promise<Response> {
-  const sessionId = c.get("sessionId");
+  const sessionId = requireSessionId(c);
+  if (sessionId instanceof Response) return sessionId;
 
   let body: unknown;
   try {
     body = await c.req.json();
   } catch {
-    return c.json({ error: "Invalid event payload", code: "INVALID_EVENT" }, 400);
+    return invalidEventResponse(c);
   }
 
   const parsed = productViewBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(
-      {
-        error: "Invalid event payload",
-        code: "INVALID_EVENT",
-        details: parsed.error.issues,
-      },
-      400,
-    );
+    return invalidEventResponse(c, parsed.error.issues);
   }
 
   const product = getProductById(parsed.data.productId);
