@@ -20,6 +20,11 @@ if (duplicateIds.size > 0) {
 
 const PRODUCTS_BY_ID = new Map(PRODUCTS.map((p) => [p.id, p] as const));
 
+const PRECOMPUTED_CATALOG = {
+  totalProducts: PRODUCTS.length,
+  categories: Array.from(new Set(PRODUCTS.map((p) => p.category))).sort(),
+} as const;
+
 export function getProductById(id: string): Product | null {
   return PRODUCTS_BY_ID.get(id) ?? null;
 }
@@ -77,6 +82,8 @@ export function getCatalogStats(): {
   totalProducts: number;
   categories: string[];
 } {
-  const categories = Array.from(new Set(PRODUCTS.map((p) => p.category))).sort();
-  return { totalProducts: PRODUCTS.length, categories };
+  return {
+    totalProducts: PRECOMPUTED_CATALOG.totalProducts,
+    categories: [...PRECOMPUTED_CATALOG.categories],
+  };
 }

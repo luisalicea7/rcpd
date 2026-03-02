@@ -15,12 +15,17 @@ export const productSchema = z.object({
 
 export const productsSchema = z.array(productSchema);
 
+const optionalNonNegativeNumber = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.coerce.number().nonnegative().optional(),
+);
+
 export const productsQuerySchema = z
   .object({
     category: z.string().optional(),
     q: z.string().optional(),
-    minPrice: z.coerce.number().nonnegative().optional(),
-    maxPrice: z.coerce.number().nonnegative().optional(),
+    minPrice: optionalNonNegativeNumber,
+    maxPrice: optionalNonNegativeNumber,
     priceRange: priceRangeSchema.optional(),
     limit: z.coerce.number().int().min(1).max(100).default(24),
     offset: z.coerce.number().int().min(0).default(0),
