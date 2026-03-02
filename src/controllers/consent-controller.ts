@@ -14,6 +14,20 @@ function redactSessionId(sessionId: string): string {
   return `${sessionId.slice(0, 6)}...${sessionId.slice(-4)}`;
 }
 
+function respondRedisUnavailable(
+  c: Context,
+  sessionId: string,
+  err: unknown,
+  message: string,
+): Response {
+  logger.error(
+    { err, sessionId: redactSessionId(sessionId), path: c.req.path },
+    message,
+  );
+
+  return c.json({ error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
+}
+
 export async function getConsentStatus(c: Context): Promise<Response> {
   const session = requireSessionId(c);
   if (session instanceof Response) return session;
@@ -25,11 +39,12 @@ export async function getConsentStatus(c: Context): Promise<Response> {
       consent: consent === "granted" ? "granted" : "pending",
     });
   } catch (err) {
-    logger.error(
-      { err, sessionId: redactSessionId(session), path: c.req.path },
+    return respondRedisUnavailable(
+      c,
+      session,
+      err,
       "Redis unavailable during consent status check",
     );
-    return c.json({ error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
   }
 }
 
@@ -48,11 +63,7 @@ export async function grantConsent(c: Context): Promise<Response> {
       ttlSeconds: config.SESSION_TTL,
     });
   } catch (err) {
-    logger.error(
-      { err, sessionId: redactSessionId(session), path: c.req.path },
-      "Redis unavailable during consent grant",
-    );
-    return c.json({ error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
+    return respondRedisUnavailable(c, session, err, "Redis unavailable during consent grant");
   }
 }
 
@@ -85,10 +96,6 @@ export async function revokeConsent(c: Context): Promise<Response> {
       deletedKeys: keysToDelete.length,
     });
   } catch (err) {
-    logger.error(
-      { err, sessionId: redactSessionId(session), path: c.req.path },
-      "Redis unavailable during consent revoke",
-    );
-    return c.json({ error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
+    return respondRedisUnavailable(c, session, err, "Redis unavailable during consent revoke");
   }
 }
