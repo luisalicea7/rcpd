@@ -3,6 +3,7 @@ import { productViewBodySchema } from "../schemas/events.js";
 import { publishEvent } from "../services/event-producer.js";
 import { getProductById } from "../services/product-service.js";
 import { EventType, type ProductViewEvent } from "../types/events.js";
+import { logger } from "../utils/logger.js";
 
 export async function createProductViewEventHandler(c: Context): Promise<Response> {
   const sessionId = c.get("sessionId");
@@ -42,6 +43,15 @@ export async function createProductViewEventHandler(c: Context): Promise<Respons
     viewDuration: parsed.data.viewDuration,
   };
 
-  const streamId = await publishEvent(event);
-  return c.json({ ok: true, streamId, eventType: event.type }, 201);
+  try {
+    const streamId = await publishEvent(event);
+    return c.json({ ok: true, streamId, eventType: event.type }, 201);
+  } catch (err) {
+    logger.error(
+      { err, sessionId, path: c.req.path, eventType: event.type },
+      "Redis unavailable during event publish",
+    );
+
+    return c.json({ ok: false, error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
+  }
 }
