@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ZodError } from "zod";
 import {
   getCatalogStats,
   getProductById,
@@ -7,9 +8,24 @@ import {
 
 export const productsRoutes = new Hono();
 
-productsRoutes.get("/", (c) => {
-  const result = listProducts(c.req.query());
-  return c.json({ ...result, ...getCatalogStats() });
+productsRoutes.get("/", async (c) => {
+  try {
+    const result = listProducts(c.req.query());
+    return c.json({ ...result, ...getCatalogStats() });
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return c.json(
+        {
+          error: "Invalid query parameters",
+          code: "INVALID_QUERY",
+          details: err.issues,
+        },
+        400,
+      );
+    }
+
+    throw err;
+  }
 });
 
 productsRoutes.get("/:id", (c) => {

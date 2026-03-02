@@ -4,8 +4,24 @@ import { productsQuerySchema, productsSchema } from "../schemas/product.js";
 
 const PRODUCTS: Product[] = productsSchema.parse(rawProducts);
 
+const seenIds = new Set<string>();
+const duplicateIds = new Set<string>();
+
+for (const product of PRODUCTS) {
+  if (seenIds.has(product.id)) duplicateIds.add(product.id);
+  seenIds.add(product.id);
+}
+
+if (duplicateIds.size > 0) {
+  throw new Error(
+    `Duplicate product IDs found: ${Array.from(duplicateIds).sort().join(", ")}`,
+  );
+}
+
+const PRODUCTS_BY_ID = new Map(PRODUCTS.map((p) => [p.id, p] as const));
+
 export function getProductById(id: string): Product | null {
-  return PRODUCTS.find((p) => p.id === id) ?? null;
+  return PRODUCTS_BY_ID.get(id) ?? null;
 }
 
 export function listProducts(input: unknown): {

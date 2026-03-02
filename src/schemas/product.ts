@@ -15,12 +15,23 @@ export const productSchema = z.object({
 
 export const productsSchema = z.array(productSchema);
 
-export const productsQuerySchema = z.object({
-  category: z.string().optional(),
-  q: z.string().optional(),
-  minPrice: z.coerce.number().nonnegative().optional(),
-  maxPrice: z.coerce.number().nonnegative().optional(),
-  priceRange: priceRangeSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(24),
-  offset: z.coerce.number().int().min(0).default(0),
-});
+export const productsQuerySchema = z
+  .object({
+    category: z.string().optional(),
+    q: z.string().optional(),
+    minPrice: z.coerce.number().nonnegative().optional(),
+    maxPrice: z.coerce.number().nonnegative().optional(),
+    priceRange: priceRangeSchema.optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(24),
+    offset: z.coerce.number().int().min(0).default(0),
+  })
+  .refine(
+    (query) =>
+      query.minPrice === undefined ||
+      query.maxPrice === undefined ||
+      query.minPrice <= query.maxPrice,
+    {
+      path: ["maxPrice"],
+      message: "maxPrice must be greater than or equal to minPrice",
+    },
+  );
