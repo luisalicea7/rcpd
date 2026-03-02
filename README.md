@@ -46,6 +46,10 @@ Server runs on `http://localhost:3000` by default.
   - `POST /api/consent/revoke`
 - Sliding TTL refresh for session keys
 - Session-owned key index for deterministic revoke cleanup (`session:{id}:keys`)
+- Product catalog API with **120 curated products**:
+  - `GET /api/products`
+  - `GET /api/products/:id`
+  - filtering (`category`, `priceRange`, `minPrice`, `maxPrice`, `q`) + pagination (`limit`, `offset`)
 
 ## Manual test flow
 
@@ -64,6 +68,22 @@ curl -i -b cookies.txt http://localhost:3000/api/consent/status
 
 # 5) Revoke and cleanup
 curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/consent/revoke
+```
+
+## Product catalog test flow
+
+```bash
+# List first page
+curl -s "http://localhost:3000/api/products" | head
+
+# Filter by category
+curl -s "http://localhost:3000/api/products?category=electronics&limit=5"
+
+# Filter by price range and search
+curl -s "http://localhost:3000/api/products?priceRange=premium&q=smart&limit=10"
+
+# Product details by id
+curl -s "http://localhost:3000/api/products/ele-001"
 ```
 
 Optional Redis checks:

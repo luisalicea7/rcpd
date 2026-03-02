@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { config } from "./config/index.js";
 import { sessionMiddleware } from "./middleware/session.js";
 import { consentRoutes } from "./routes/consent.js";
+import { productsRoutes } from "./routes/products.js";
 import { logger } from "./utils/logger.js";
 
 export const app = new Hono();
@@ -22,6 +23,7 @@ app.get("/health", (c) => {
 app.use("*", sessionMiddleware);
 
 app.route("/api/consent", consentRoutes);
+app.route("/api/products", productsRoutes);
 
 app.onError((err, c) => {
   logger.error({ err, path: c.req.path }, "Unhandled application error");

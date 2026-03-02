@@ -1,0 +1,1742 @@
+[
+  {
+    "id": "bea-001",
+    "name": "Face Cleanser",
+    "category": "beauty",
+    "price": 211.59,
+    "description": "Face Cleanser designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 15
+  },
+  {
+    "id": "bea-002",
+    "name": "Moisturizer",
+    "category": "beauty",
+    "price": 104.06,
+    "description": "Moisturizer designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 165
+  },
+  {
+    "id": "bea-003",
+    "name": "Serum",
+    "category": "beauty",
+    "price": 69.77,
+    "description": "Serum designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 121
+  },
+  {
+    "id": "bea-004",
+    "name": "Sunscreen",
+    "category": "beauty",
+    "price": 30.57,
+    "description": "Sunscreen designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "beauty",
+      "budget",
+      "demo"
+    ],
+    "stock": 126
+  },
+  {
+    "id": "bea-005",
+    "name": "Shampoo",
+    "category": "beauty",
+    "price": 67.74,
+    "description": "Shampoo designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 171
+  },
+  {
+    "id": "bea-006",
+    "name": "Conditioner",
+    "category": "beauty",
+    "price": 27.4,
+    "description": "Conditioner designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "beauty",
+      "budget",
+      "demo"
+    ],
+    "stock": 78
+  },
+  {
+    "id": "bea-007",
+    "name": "Hair Dryer",
+    "category": "beauty",
+    "price": 58.1,
+    "description": "Hair Dryer designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 89
+  },
+  {
+    "id": "bea-008",
+    "name": "Straightener",
+    "category": "beauty",
+    "price": 84.64,
+    "description": "Straightener designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 128
+  },
+  {
+    "id": "bea-009",
+    "name": "Makeup Kit",
+    "category": "beauty",
+    "price": 33.17,
+    "description": "Makeup Kit designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "beauty",
+      "budget",
+      "demo"
+    ],
+    "stock": 79
+  },
+  {
+    "id": "bea-010",
+    "name": "Foundation",
+    "category": "beauty",
+    "price": 127.48,
+    "description": "Foundation designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 145
+  },
+  {
+    "id": "bea-011",
+    "name": "Lipstick",
+    "category": "beauty",
+    "price": 11.96,
+    "description": "Lipstick designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "beauty",
+      "budget",
+      "demo"
+    ],
+    "stock": 134
+  },
+  {
+    "id": "bea-012",
+    "name": "Mascara",
+    "category": "beauty",
+    "price": 241.58,
+    "description": "Mascara designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 28
+  },
+  {
+    "id": "bea-013",
+    "name": "Body Lotion",
+    "category": "beauty",
+    "price": 250.64,
+    "description": "Body Lotion designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 166
+  },
+  {
+    "id": "bea-014",
+    "name": "Fragrance Mist",
+    "category": "beauty",
+    "price": 101.0,
+    "description": "Fragrance Mist designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 129
+  },
+  {
+    "id": "bea-015",
+    "name": "Nail Kit",
+    "category": "beauty",
+    "price": 251.18,
+    "description": "Nail Kit designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 108
+  },
+  {
+    "id": "bea-016",
+    "name": "Exfoliator",
+    "category": "beauty",
+    "price": 95.82,
+    "description": "Exfoliator designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 89
+  },
+  {
+    "id": "bea-017",
+    "name": "Eye Cream",
+    "category": "beauty",
+    "price": 221.63,
+    "description": "Eye Cream designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 55
+  },
+  {
+    "id": "bea-018",
+    "name": "Face Mask",
+    "category": "beauty",
+    "price": 102.9,
+    "description": "Face Mask designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "beauty",
+      "mid",
+      "demo"
+    ],
+    "stock": 155
+  },
+  {
+    "id": "bea-019",
+    "name": "Beard Trimmer",
+    "category": "beauty",
+    "price": 225.79,
+    "description": "Beard Trimmer designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 18
+  },
+  {
+    "id": "bea-020",
+    "name": "Electric Shaver",
+    "category": "beauty",
+    "price": 255.94,
+    "description": "Electric Shaver designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "beauty",
+      "premium",
+      "demo"
+    ],
+    "stock": 85
+  },
+  {
+    "id": "ele-001",
+    "name": "Headphones",
+    "category": "electronics",
+    "price": 698.31,
+    "description": "Headphones designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 29
+  },
+  {
+    "id": "ele-002",
+    "name": "Speaker",
+    "category": "electronics",
+    "price": 782.59,
+    "description": "Speaker designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 112
+  },
+  {
+    "id": "ele-003",
+    "name": "Smartwatch",
+    "category": "electronics",
+    "price": 178.32,
+    "description": "Smartwatch designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "electronics",
+      "mid",
+      "demo",
+      "tech"
+    ],
+    "stock": 36
+  },
+  {
+    "id": "ele-004",
+    "name": "Tablet",
+    "category": "electronics",
+    "price": 492.08,
+    "description": "Tablet designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 106
+  },
+  {
+    "id": "ele-005",
+    "name": "Keyboard",
+    "category": "electronics",
+    "price": 135.79,
+    "description": "Keyboard designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "electronics",
+      "mid",
+      "demo",
+      "tech"
+    ],
+    "stock": 41
+  },
+  {
+    "id": "ele-006",
+    "name": "Mouse",
+    "category": "electronics",
+    "price": 1141.61,
+    "description": "Mouse designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 151
+  },
+  {
+    "id": "ele-007",
+    "name": "Monitor",
+    "category": "electronics",
+    "price": 419.06,
+    "description": "Monitor designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 163
+  },
+  {
+    "id": "ele-008",
+    "name": "Webcam",
+    "category": "electronics",
+    "price": 455.97,
+    "description": "Webcam designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 121
+  },
+  {
+    "id": "ele-009",
+    "name": "Router",
+    "category": "electronics",
+    "price": 774.59,
+    "description": "Router designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 81
+  },
+  {
+    "id": "ele-010",
+    "name": "SSD",
+    "category": "electronics",
+    "price": 1109.63,
+    "description": "SSD designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 112
+  },
+  {
+    "id": "ele-011",
+    "name": "Power Bank",
+    "category": "electronics",
+    "price": 371.92,
+    "description": "Power Bank designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 176
+  },
+  {
+    "id": "ele-012",
+    "name": "Action Camera",
+    "category": "electronics",
+    "price": 192.84,
+    "description": "Action Camera designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 94
+  },
+  {
+    "id": "ele-013",
+    "name": "Drone",
+    "category": "electronics",
+    "price": 1052.44,
+    "description": "Drone designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 126
+  },
+  {
+    "id": "ele-014",
+    "name": "Projector",
+    "category": "electronics",
+    "price": 168.48,
+    "description": "Projector designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "electronics",
+      "mid",
+      "demo",
+      "tech"
+    ],
+    "stock": 119
+  },
+  {
+    "id": "ele-015",
+    "name": "Microphone",
+    "category": "electronics",
+    "price": 617.43,
+    "description": "Microphone designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 95
+  },
+  {
+    "id": "ele-016",
+    "name": "Gaming Chair",
+    "category": "electronics",
+    "price": 379.26,
+    "description": "Gaming Chair designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 38
+  },
+  {
+    "id": "ele-017",
+    "name": "VR Headset",
+    "category": "electronics",
+    "price": 541.95,
+    "description": "VR Headset designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 145
+  },
+  {
+    "id": "ele-018",
+    "name": "E-reader",
+    "category": "electronics",
+    "price": 603.78,
+    "description": "E-reader designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 111
+  },
+  {
+    "id": "ele-019",
+    "name": "Smart Bulb",
+    "category": "electronics",
+    "price": 768.68,
+    "description": "Smart Bulb designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 64
+  },
+  {
+    "id": "ele-020",
+    "name": "Security Camera",
+    "category": "electronics",
+    "price": 511.79,
+    "description": "Security Camera designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "electronics",
+      "premium",
+      "demo",
+      "tech"
+    ],
+    "stock": 42
+  },
+  {
+    "id": "fas-001",
+    "name": "Hoodie",
+    "category": "fashion",
+    "price": 372.78,
+    "description": "Hoodie designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 51
+  },
+  {
+    "id": "fas-002",
+    "name": "Sneakers",
+    "category": "fashion",
+    "price": 23.3,
+    "description": "Sneakers designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "fashion",
+      "budget",
+      "demo"
+    ],
+    "stock": 26
+  },
+  {
+    "id": "fas-003",
+    "name": "Denim Jacket",
+    "category": "fashion",
+    "price": 76.84,
+    "description": "Denim Jacket designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 146
+  },
+  {
+    "id": "fas-004",
+    "name": "Backpack",
+    "category": "fashion",
+    "price": 81.21,
+    "description": "Backpack designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 33
+  },
+  {
+    "id": "fas-005",
+    "name": "Sunglasses",
+    "category": "fashion",
+    "price": 107.13,
+    "description": "Sunglasses designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 140
+  },
+  {
+    "id": "fas-006",
+    "name": "Watch",
+    "category": "fashion",
+    "price": 270.78,
+    "description": "Watch designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 9
+  },
+  {
+    "id": "fas-007",
+    "name": "Belt",
+    "category": "fashion",
+    "price": 24.05,
+    "description": "Belt designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "fashion",
+      "budget",
+      "demo"
+    ],
+    "stock": 53
+  },
+  {
+    "id": "fas-008",
+    "name": "Wallet",
+    "category": "fashion",
+    "price": 243.15,
+    "description": "Wallet designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 144
+  },
+  {
+    "id": "fas-009",
+    "name": "Beanie",
+    "category": "fashion",
+    "price": 366.85,
+    "description": "Beanie designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 167
+  },
+  {
+    "id": "fas-010",
+    "name": "Scarf",
+    "category": "fashion",
+    "price": 41.52,
+    "description": "Scarf designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "fashion",
+      "budget",
+      "demo"
+    ],
+    "stock": 165
+  },
+  {
+    "id": "fas-011",
+    "name": "Dress Shirt",
+    "category": "fashion",
+    "price": 43.36,
+    "description": "Dress Shirt designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "fashion",
+      "budget",
+      "demo"
+    ],
+    "stock": 176
+  },
+  {
+    "id": "fas-012",
+    "name": "Joggers",
+    "category": "fashion",
+    "price": 368.96,
+    "description": "Joggers designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 45
+  },
+  {
+    "id": "fas-013",
+    "name": "Polo Shirt",
+    "category": "fashion",
+    "price": 149.46,
+    "description": "Polo Shirt designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 145
+  },
+  {
+    "id": "fas-014",
+    "name": "Boots",
+    "category": "fashion",
+    "price": 172.69,
+    "description": "Boots designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 90
+  },
+  {
+    "id": "fas-015",
+    "name": "Sandals",
+    "category": "fashion",
+    "price": 156.75,
+    "description": "Sandals designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 6
+  },
+  {
+    "id": "fas-016",
+    "name": "Handbag",
+    "category": "fashion",
+    "price": 60.09,
+    "description": "Handbag designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "fashion",
+      "mid",
+      "demo"
+    ],
+    "stock": 105
+  },
+  {
+    "id": "fas-017",
+    "name": "Perfume",
+    "category": "fashion",
+    "price": 337.08,
+    "description": "Perfume designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 140
+  },
+  {
+    "id": "fas-018",
+    "name": "Earrings",
+    "category": "fashion",
+    "price": 320.22,
+    "description": "Earrings designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 131
+  },
+  {
+    "id": "fas-019",
+    "name": "Necklace",
+    "category": "fashion",
+    "price": 330.55,
+    "description": "Necklace designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 136
+  },
+  {
+    "id": "fas-020",
+    "name": "Cap",
+    "category": "fashion",
+    "price": 273.25,
+    "description": "Cap designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "fashion",
+      "premium",
+      "demo"
+    ],
+    "stock": 150
+  },
+  {
+    "id": "hom-001",
+    "name": "Blender",
+    "category": "home",
+    "price": 291.44,
+    "description": "Blender designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 136
+  },
+  {
+    "id": "hom-002",
+    "name": "Air Fryer",
+    "category": "home",
+    "price": 250.89,
+    "description": "Air Fryer designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 107
+  },
+  {
+    "id": "hom-003",
+    "name": "Coffee Maker",
+    "category": "home",
+    "price": 70.7,
+    "description": "Coffee Maker designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 58
+  },
+  {
+    "id": "hom-004",
+    "name": "Vacuum",
+    "category": "home",
+    "price": 100.61,
+    "description": "Vacuum designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 150
+  },
+  {
+    "id": "hom-005",
+    "name": "Humidifier",
+    "category": "home",
+    "price": 291.58,
+    "description": "Humidifier designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 58
+  },
+  {
+    "id": "hom-006",
+    "name": "Desk Lamp",
+    "category": "home",
+    "price": 94.1,
+    "description": "Desk Lamp designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 126
+  },
+  {
+    "id": "hom-007",
+    "name": "Cookware Set",
+    "category": "home",
+    "price": 76.98,
+    "description": "Cookware Set designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 84
+  },
+  {
+    "id": "hom-008",
+    "name": "Bedding Set",
+    "category": "home",
+    "price": 90.98,
+    "description": "Bedding Set designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 46
+  },
+  {
+    "id": "hom-009",
+    "name": "Storage Shelf",
+    "category": "home",
+    "price": 29.19,
+    "description": "Storage Shelf designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "home",
+      "budget",
+      "demo"
+    ],
+    "stock": 11
+  },
+  {
+    "id": "hom-010",
+    "name": "Water Filter",
+    "category": "home",
+    "price": 170.02,
+    "description": "Water Filter designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 47
+  },
+  {
+    "id": "hom-011",
+    "name": "Knife Set",
+    "category": "home",
+    "price": 412.83,
+    "description": "Knife Set designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 62
+  },
+  {
+    "id": "hom-012",
+    "name": "Toaster",
+    "category": "home",
+    "price": 429.71,
+    "description": "Toaster designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 131
+  },
+  {
+    "id": "hom-013",
+    "name": "Rice Cooker",
+    "category": "home",
+    "price": 391.97,
+    "description": "Rice Cooker designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 54
+  },
+  {
+    "id": "hom-014",
+    "name": "Electric Kettle",
+    "category": "home",
+    "price": 245.59,
+    "description": "Electric Kettle designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 31
+  },
+  {
+    "id": "hom-015",
+    "name": "Wall Clock",
+    "category": "home",
+    "price": 258.12,
+    "description": "Wall Clock designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 161
+  },
+  {
+    "id": "hom-016",
+    "name": "Mirror",
+    "category": "home",
+    "price": 263.33,
+    "description": "Mirror designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 35
+  },
+  {
+    "id": "hom-017",
+    "name": "Standing Fan",
+    "category": "home",
+    "price": 417.94,
+    "description": "Standing Fan designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 167
+  },
+  {
+    "id": "hom-018",
+    "name": "Diffuser",
+    "category": "home",
+    "price": 62.24,
+    "description": "Diffuser designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 26
+  },
+  {
+    "id": "hom-019",
+    "name": "Laundry Basket",
+    "category": "home",
+    "price": 105.4,
+    "description": "Laundry Basket designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "home",
+      "mid",
+      "demo"
+    ],
+    "stock": 172
+  },
+  {
+    "id": "hom-020",
+    "name": "Curtain Set",
+    "category": "home",
+    "price": 331.15,
+    "description": "Curtain Set designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "home",
+      "premium",
+      "demo"
+    ],
+    "stock": 94
+  },
+  {
+    "id": "kid-001",
+    "name": "Building Blocks",
+    "category": "kids",
+    "price": 24.31,
+    "description": "Building Blocks designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "kids",
+      "budget",
+      "demo",
+      "active"
+    ],
+    "stock": 166
+  },
+  {
+    "id": "kid-002",
+    "name": "Learning Tablet",
+    "category": "kids",
+    "price": 50.56,
+    "description": "Learning Tablet designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "kids",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 110
+  },
+  {
+    "id": "kid-003",
+    "name": "Toy Car",
+    "category": "kids",
+    "price": 155.99,
+    "description": "Toy Car designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "kids",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 145
+  },
+  {
+    "id": "kid-004",
+    "name": "Doll House",
+    "category": "kids",
+    "price": 153.8,
+    "description": "Doll House designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "kids",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 172
+  },
+  {
+    "id": "kid-005",
+    "name": "Puzzle Set",
+    "category": "kids",
+    "price": 257.06,
+    "description": "Puzzle Set designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 105
+  },
+  {
+    "id": "kid-006",
+    "name": "Art Kit",
+    "category": "kids",
+    "price": 116.0,
+    "description": "Art Kit designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "kids",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 132
+  },
+  {
+    "id": "kid-007",
+    "name": "Story Book",
+    "category": "kids",
+    "price": 239.93,
+    "description": "Story Book designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 145
+  },
+  {
+    "id": "kid-008",
+    "name": "Scooter",
+    "category": "kids",
+    "price": 293.6,
+    "description": "Scooter designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 66
+  },
+  {
+    "id": "kid-009",
+    "name": "Kids Backpack",
+    "category": "kids",
+    "price": 20.24,
+    "description": "Kids Backpack designed for everyday use with reliable quality and value.",
+    "priceRange": "budget",
+    "tags": [
+      "kids",
+      "budget",
+      "demo",
+      "active"
+    ],
+    "stock": 110
+  },
+  {
+    "id": "kid-010",
+    "name": "Lunch Box",
+    "category": "kids",
+    "price": 201.77,
+    "description": "Lunch Box designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 20
+  },
+  {
+    "id": "kid-011",
+    "name": "Water Bottle",
+    "category": "kids",
+    "price": 267.03,
+    "description": "Water Bottle designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 60
+  },
+  {
+    "id": "kid-012",
+    "name": "Plush Toy",
+    "category": "kids",
+    "price": 237.93,
+    "description": "Plush Toy designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 84
+  },
+  {
+    "id": "kid-013",
+    "name": "STEM Kit",
+    "category": "kids",
+    "price": 252.46,
+    "description": "STEM Kit designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 130
+  },
+  {
+    "id": "kid-014",
+    "name": "Board Game",
+    "category": "kids",
+    "price": 249.46,
+    "description": "Board Game designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 68
+  },
+  {
+    "id": "kid-015",
+    "name": "Basketball Hoop",
+    "category": "kids",
+    "price": 65.43,
+    "description": "Basketball Hoop designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "kids",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 170
+  },
+  {
+    "id": "kid-016",
+    "name": "Play Tent",
+    "category": "kids",
+    "price": 73.74,
+    "description": "Play Tent designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "kids",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 14
+  },
+  {
+    "id": "kid-017",
+    "name": "Alphabet Cards",
+    "category": "kids",
+    "price": 233.19,
+    "description": "Alphabet Cards designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 33
+  },
+  {
+    "id": "kid-018",
+    "name": "Remote Car",
+    "category": "kids",
+    "price": 307.7,
+    "description": "Remote Car designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 71
+  },
+  {
+    "id": "kid-019",
+    "name": "Coloring Set",
+    "category": "kids",
+    "price": 284.81,
+    "description": "Coloring Set designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 122
+  },
+  {
+    "id": "kid-020",
+    "name": "Robot Toy",
+    "category": "kids",
+    "price": 278.74,
+    "description": "Robot Toy designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "kids",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 68
+  },
+  {
+    "id": "spo-001",
+    "name": "Yoga Mat",
+    "category": "sports",
+    "price": 573.29,
+    "description": "Yoga Mat designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 171
+  },
+  {
+    "id": "spo-002",
+    "name": "Dumbbell Set",
+    "category": "sports",
+    "price": 779.32,
+    "description": "Dumbbell Set designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 59
+  },
+  {
+    "id": "spo-003",
+    "name": "Resistance Bands",
+    "category": "sports",
+    "price": 229.26,
+    "description": "Resistance Bands designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 88
+  },
+  {
+    "id": "spo-004",
+    "name": "Kettlebell",
+    "category": "sports",
+    "price": 441.39,
+    "description": "Kettlebell designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 174
+  },
+  {
+    "id": "spo-005",
+    "name": "Running Shoes",
+    "category": "sports",
+    "price": 857.66,
+    "description": "Running Shoes designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 135
+  },
+  {
+    "id": "spo-006",
+    "name": "Cycling Helmet",
+    "category": "sports",
+    "price": 807.27,
+    "description": "Cycling Helmet designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 43
+  },
+  {
+    "id": "spo-007",
+    "name": "Tennis Racket",
+    "category": "sports",
+    "price": 496.06,
+    "description": "Tennis Racket designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 88
+  },
+  {
+    "id": "spo-008",
+    "name": "Basketball",
+    "category": "sports",
+    "price": 580.38,
+    "description": "Basketball designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 19
+  },
+  {
+    "id": "spo-009",
+    "name": "Football",
+    "category": "sports",
+    "price": 295.01,
+    "description": "Football designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 148
+  },
+  {
+    "id": "spo-010",
+    "name": "Fitness Tracker",
+    "category": "sports",
+    "price": 76.1,
+    "description": "Fitness Tracker designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "sports",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 56
+  },
+  {
+    "id": "spo-011",
+    "name": "Protein Shaker",
+    "category": "sports",
+    "price": 532.01,
+    "description": "Protein Shaker designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 68
+  },
+  {
+    "id": "spo-012",
+    "name": "Jump Rope",
+    "category": "sports",
+    "price": 583.64,
+    "description": "Jump Rope designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 36
+  },
+  {
+    "id": "spo-013",
+    "name": "Foam Roller",
+    "category": "sports",
+    "price": 334.93,
+    "description": "Foam Roller designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 59
+  },
+  {
+    "id": "spo-014",
+    "name": "Hiking Backpack",
+    "category": "sports",
+    "price": 136.65,
+    "description": "Hiking Backpack designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "sports",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 40
+  },
+  {
+    "id": "spo-015",
+    "name": "Camping Tent",
+    "category": "sports",
+    "price": 775.67,
+    "description": "Camping Tent designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 175
+  },
+  {
+    "id": "spo-016",
+    "name": "Treadmill",
+    "category": "sports",
+    "price": 734.84,
+    "description": "Treadmill designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 55
+  },
+  {
+    "id": "spo-017",
+    "name": "Exercise Bike",
+    "category": "sports",
+    "price": 106.05,
+    "description": "Exercise Bike designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "sports",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 117
+  },
+  {
+    "id": "spo-018",
+    "name": "Punching Bag",
+    "category": "sports",
+    "price": 351.01,
+    "description": "Punching Bag designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 21
+  },
+  {
+    "id": "spo-019",
+    "name": "Swim Goggles",
+    "category": "sports",
+    "price": 245.78,
+    "description": "Swim Goggles designed for everyday use with reliable quality and value.",
+    "priceRange": "premium",
+    "tags": [
+      "sports",
+      "premium",
+      "demo",
+      "active"
+    ],
+    "stock": 51
+  },
+  {
+    "id": "spo-020",
+    "name": "Skateboard",
+    "category": "sports",
+    "price": 143.91,
+    "description": "Skateboard designed for everyday use with reliable quality and value.",
+    "priceRange": "mid",
+    "tags": [
+      "sports",
+      "mid",
+      "demo",
+      "active"
+    ],
+    "stock": 142
+  }
+]
