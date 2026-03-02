@@ -6,6 +6,14 @@ import { EventType, type ProductViewEvent } from "../types/events.js";
 import { logger } from "../utils/logger.js";
 import { requireSessionId } from "../utils/session-context.js";
 
+function redactSessionId(sessionId: string): string {
+  if (sessionId.length <= 10) {
+    return "****REDACTED****";
+  }
+
+  return `${sessionId.slice(0, 6)}...${sessionId.slice(-4)}`;
+}
+
 function invalidEventResponse(c: Context, details?: unknown): Response {
   return c.json(
     {
@@ -54,7 +62,12 @@ export async function createProductViewEventHandler(c: Context): Promise<Respons
     return c.json({ ok: true, streamId, eventType: event.type }, 201);
   } catch (err) {
     logger.error(
-      { err, sessionId, path: c.req.path, eventType: event.type },
+      {
+        err,
+        sessionId: redactSessionId(sessionId),
+        path: c.req.path,
+        eventType: event.type,
+      },
       "Redis unavailable during event publish",
     );
 

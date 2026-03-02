@@ -7,6 +7,10 @@ import { keyIndexKey, trackSessionKey } from "../utils/session-keys.js";
 import { logger } from "../utils/logger.js";
 
 function redactSessionId(sessionId: string): string {
+  if (sessionId.length <= 10) {
+    return "****REDACTED****";
+  }
+
   return `${sessionId.slice(0, 6)}...${sessionId.slice(-4)}`;
 }
 
