@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { z } from "zod";
 import {
   addToCartBodySchema,
   productViewBodySchema,
@@ -36,6 +37,28 @@ function invalidEventResponse(c: Context, details?: unknown): Response {
   );
 }
 
+async function parseEventRequest<T extends z.ZodTypeAny>(
+  c: Context,
+  schema: T,
+): Promise<{ sessionId: string; data: z.infer<T> } | Response> {
+  const sessionId = requireSessionId(c);
+  if (sessionId instanceof Response) return sessionId;
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return invalidEventResponse(c);
+  }
+
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    return invalidEventResponse(c, parsed.error.issues);
+  }
+
+  return { sessionId, data: parsed.data };
+}
+
 async function publishOr503(
   c: Context,
   sessionId: string,
@@ -61,22 +84,12 @@ async function publishOr503(
 }
 
 export async function createProductViewEventHandler(c: Context): Promise<Response> {
-  const sessionId = requireSessionId(c);
-  if (sessionId instanceof Response) return sessionId;
+  const parsedRequest = await parseEventRequest(c, productViewBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
 
-  let body: unknown;
-  try {
-    body = await c.req.json();
-  } catch {
-    return invalidEventResponse(c);
-  }
+  const { sessionId, data } = parsedRequest;
 
-  const parsed = productViewBodySchema.safeParse(body);
-  if (!parsed.success) {
-    return invalidEventResponse(c, parsed.error.issues);
-  }
-
-  const product = getProductById(parsed.data.productId);
+  const product = getProductById(data.productId);
   if (!product) {
     return c.json({ error: "Product not found", code: "PRODUCT_NOT_FOUND" }, 404);
   }
@@ -89,56 +102,36 @@ export async function createProductViewEventHandler(c: Context): Promise<Respons
     productName: product.name,
     category: product.category,
     price: product.price,
-    viewDuration: parsed.data.viewDuration,
+    viewDuration: data.viewDuration,
   };
 
   return publishOr503(c, sessionId, event.type, event);
 }
 
 export async function createSearchEventHandler(c: Context): Promise<Response> {
-  const sessionId = requireSessionId(c);
-  if (sessionId instanceof Response) return sessionId;
+  const parsedRequest = await parseEventRequest(c, searchEventBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
 
-  let body: unknown;
-  try {
-    body = await c.req.json();
-  } catch {
-    return invalidEventResponse(c);
-  }
-
-  const parsed = searchEventBodySchema.safeParse(body);
-  if (!parsed.success) {
-    return invalidEventResponse(c, parsed.error.issues);
-  }
+  const { sessionId, data } = parsedRequest;
 
   const event: SearchEvent = {
     type: EventType.SEARCH,
     sessionId,
     timestamp: Date.now(),
-    query: parsed.data.query,
-    resultsCount: parsed.data.resultsCount,
+    query: data.query,
+    resultsCount: data.resultsCount,
   };
 
   return publishOr503(c, sessionId, event.type, event);
 }
 
 export async function createAddToCartEventHandler(c: Context): Promise<Response> {
-  const sessionId = requireSessionId(c);
-  if (sessionId instanceof Response) return sessionId;
+  const parsedRequest = await parseEventRequest(c, addToCartBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
 
-  let body: unknown;
-  try {
-    body = await c.req.json();
-  } catch {
-    return invalidEventResponse(c);
-  }
+  const { sessionId, data } = parsedRequest;
 
-  const parsed = addToCartBodySchema.safeParse(body);
-  if (!parsed.success) {
-    return invalidEventResponse(c, parsed.error.issues);
-  }
-
-  const product = getProductById(parsed.data.productId);
+  const product = getProductById(data.productId);
   if (!product) {
     return c.json({ error: "Product not found", code: "PRODUCT_NOT_FOUND" }, 404);
   }
@@ -151,34 +144,24 @@ export async function createAddToCartEventHandler(c: Context): Promise<Response>
     productName: product.name,
     category: product.category,
     price: product.price,
-    quantity: parsed.data.quantity,
+    quantity: data.quantity,
   };
 
   return publishOr503(c, sessionId, event.type, event);
 }
 
 export async function createRemoveFromCartEventHandler(c: Context): Promise<Response> {
-  const sessionId = requireSessionId(c);
-  if (sessionId instanceof Response) return sessionId;
+  const parsedRequest = await parseEventRequest(c, removeFromCartBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
 
-  let body: unknown;
-  try {
-    body = await c.req.json();
-  } catch {
-    return invalidEventResponse(c);
-  }
-
-  const parsed = removeFromCartBodySchema.safeParse(body);
-  if (!parsed.success) {
-    return invalidEventResponse(c, parsed.error.issues);
-  }
+  const { sessionId, data } = parsedRequest;
 
   const event: RemoveFromCartEvent = {
     type: EventType.REMOVE_FROM_CART,
     sessionId,
     timestamp: Date.now(),
-    productId: parsed.data.productId,
-    quantity: parsed.data.quantity,
+    productId: data.productId,
+    quantity: data.quantity,
   };
 
   return publishOr503(c, sessionId, event.type, event);
