@@ -11,6 +11,7 @@ import { getProductById } from "../services/product-service.js";
 import {
   EventType,
   type AddToCartEvent,
+  type AppEvent,
   type ProductViewEvent,
   type RemoveFromCartEvent,
   type SearchEvent,
@@ -26,12 +27,11 @@ function redactSessionId(sessionId: string): string {
   return `${sessionId.slice(0, 6)}...${sessionId.slice(-4)}`;
 }
 
-function invalidEventResponse(c: Context, details?: unknown): Response {
+function invalidEventResponse(c: Context): Response {
   return c.json(
     {
       error: "Invalid event payload",
       code: "INVALID_EVENT",
-      ...(details ? { details } : {}),
     },
     400,
   );
@@ -53,7 +53,15 @@ async function parseEventRequest<T extends z.ZodTypeAny>(
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return invalidEventResponse(c, parsed.error.issues);
+    logger.warn(
+      {
+        path: c.req.path,
+        sessionId: redactSessionId(sessionId),
+        issues: parsed.error.issues,
+      },
+      "Invalid event payload validation",
+    );
+    return invalidEventResponse(c);
   }
 
   return { sessionId, data: parsed.data };
@@ -63,7 +71,7 @@ async function publishOr503(
   c: Context,
   sessionId: string,
   eventType: EventType,
-  event: ProductViewEvent | SearchEvent | AddToCartEvent | RemoveFromCartEvent,
+  event: AppEvent,
 ): Promise<Response> {
   try {
     const streamId = await publishEvent(event);
