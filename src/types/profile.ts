@@ -10,6 +10,7 @@ export interface PriceStatistics {
   min: number;
   max: number;
   avg: number;
+  sampleCount: number;
   sensitivity: "budget" | "mid" | "premium";
 }
 

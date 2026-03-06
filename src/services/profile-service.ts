@@ -40,6 +40,50 @@ function defaultProfile(sessionId: string): BehavioralProfile {
   };
 }
 
+function isValidBehavioralProfile(value: unknown): value is BehavioralProfile {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+
+  if (typeof v.sessionId !== "string") return false;
+  if (!Array.isArray(v.interests)) return false;
+
+  if (!v.engagement || typeof v.engagement !== "object") return false;
+  const e = v.engagement as Record<string, unknown>;
+  const engagementKeys = [
+    "totalEvents",
+    "avgScrollDepth",
+    "clickCount",
+    "filterUsageCount",
+    "searchCount",
+    "repeatViewCount",
+  ];
+  if (engagementKeys.some((k) => typeof e[k] !== "number")) return false;
+
+  if (!v.abandonmentRisk || typeof v.abandonmentRisk !== "object") return false;
+  const ar = v.abandonmentRisk as Record<string, unknown>;
+  if (typeof ar.score !== "number") return false;
+  if (!ar.factors || typeof ar.factors !== "object") return false;
+
+  if (v.cartLastUpdated !== null && typeof v.cartLastUpdated !== "number") return false;
+  if (typeof v.lastUpdated !== "number") return false;
+
+  if (v.priceStats !== null) {
+    if (!v.priceStats || typeof v.priceStats !== "object") return false;
+    const ps = v.priceStats as Record<string, unknown>;
+    if (
+      typeof ps.min !== "number" ||
+      typeof ps.max !== "number" ||
+      typeof ps.avg !== "number" ||
+      typeof ps.sampleCount !== "number" ||
+      (ps.sensitivity !== "budget" && ps.sensitivity !== "mid" && ps.sensitivity !== "premium")
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function updateCategoryInterest(
   interests: CategoryInterest[],
   category: string,
@@ -77,15 +121,19 @@ function updatePriceStats(current: PriceStatistics | null, price: number): Price
       min: price,
       max: price,
       avg: price,
+      sampleCount: 1,
       sensitivity: price < 50 ? "budget" : price < 180 ? "mid" : "premium",
     };
   }
 
-  const avg = (current.avg + price) / 2;
+  const sampleCount = current.sampleCount + 1;
+  const avg = (current.avg * current.sampleCount + price) / sampleCount;
+
   return {
     min: Math.min(current.min, price),
     max: Math.max(current.max, price),
     avg,
+    sampleCount,
     sensitivity: avg < 50 ? "budget" : avg < 180 ? "mid" : "premium",
   };
 }
@@ -126,7 +174,12 @@ export async function getProfile(sessionId: string): Promise<BehavioralProfile> 
   if (!raw) return defaultProfile(sessionId);
 
   try {
-    return JSON.parse(raw) as BehavioralProfile;
+    const parsed = JSON.parse(raw);
+    if (!isValidBehavioralProfile(parsed)) {
+      return defaultProfile(sessionId);
+    }
+
+    return parsed;
   } catch {
     return defaultProfile(sessionId);
   }
