@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "build": "tsc",
-    "start": "bun src/index.ts"
+    "start": "bun src/index.ts",
+    "consume:profile:once": "bun src/workers/profile-consumer.ts once",
+    "consume:profile:loop": "bun src/workers/profile-consumer.ts loop"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.9",
