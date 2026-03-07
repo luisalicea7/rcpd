@@ -6,6 +6,7 @@ import { consentRoutes } from "./routes/consent.js";
 import { productsRoutes } from "./routes/products.js";
 import { eventsRoutes } from "./routes/events.js";
 import { profileRoutes } from "./routes/profile.js";
+import { personalizationRoutes } from "./routes/personalization.js";
 import { logger } from "./utils/logger.js";
 
 export const app = new Hono();
@@ -28,6 +29,7 @@ app.route("/api/consent", consentRoutes);
 app.route("/api/products", productsRoutes);
 app.route("/api/events", eventsRoutes);
 app.route("/api/profile", profileRoutes);
+app.route("/api/personalization", personalizationRoutes);
 
 app.onError((err, c) => {
   logger.error({ err, path: c.req.path }, "Unhandled application error");
