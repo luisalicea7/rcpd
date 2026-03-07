@@ -1,5 +1,8 @@
+// NOTE: Redis client remains shared ioredis adapter for now.
+// Bun.redis migration is tracked as separate infrastructure work.
 import { redis } from "../config/redis.js";
 import { getProfile } from "./profile-service.js";
+import { logger } from "../utils/logger.js";
 import {
   ActionType,
   type PersonalizationAction,
@@ -81,7 +84,15 @@ export async function getPersonalization(sessionId: string): Promise<{
     .sort((a, b) => b.reasoning.confidence - a.reasoning.confidence)
     .slice(0, MAX_ACTIONS);
 
-  await redis.set(actionsKey(sessionId), JSON.stringify(ranked), "EX", ACTIONS_TTL_SECONDS);
+  const key = actionsKey(sessionId);
+  try {
+    await redis.set(key, JSON.stringify(ranked), "EX", ACTIONS_TTL_SECONDS);
+  } catch (err) {
+    logger.error(
+      { err, sessionId, key, ttlSeconds: ACTIONS_TTL_SECONDS },
+      "Failed to cache personalization actions",
+    );
+  }
 
   return {
     sessionId,
