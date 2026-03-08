@@ -63,11 +63,11 @@ export async function consumeProfileEventsOnce(batchSize = 50): Promise<number> 
     lastId,
   );
 
-  if (!results || results.length === 0) return 0;
+  if (!results || Object.keys(results).length === 0) return 0;
 
   let processed = 0;
 
-  for (const [, entries] of results) {
+  for (const entries of Object.values(results)) {
     for (const [id, fields] of entries) {
       const event = parseEventFromFields(fields as string[]);
       if (!event) {
