@@ -7,6 +7,8 @@ const SCAN_COUNT = 200;
 function isAction(value: unknown): value is PersonalizationAction {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
+  const confidence = (v.reasoning as Record<string, unknown> | null)?.confidence;
+
   return (
     typeof v.type === "string" &&
     Object.values(ActionType).includes(v.type as ActionType) &&
@@ -14,7 +16,8 @@ function isAction(value: unknown): value is PersonalizationAction {
     Number.isFinite(v.createdAt) &&
     v.reasoning !== null &&
     typeof v.reasoning === "object" &&
-    typeof (v.reasoning as Record<string, unknown>).confidence === "number"
+    typeof confidence === "number" &&
+    Number.isFinite(confidence)
   );
 }
 
@@ -41,6 +44,7 @@ export async function getPersonalizationMetrics(): Promise<{
   let totalActions = 0;
   let confidenceSum = 0;
 
+  const processedKeys = new Set<string>();
   let cursor = "0";
 
   do {
@@ -56,7 +60,12 @@ export async function getPersonalizationMetrics(): Promise<{
 
     if (keys.length === 0) continue;
 
-    const values = await redis.mget(...keys);
+    const uniqueKeys = Array.from(new Set(keys)).filter((key) => !processedKeys.has(key));
+    if (uniqueKeys.length === 0) continue;
+
+    for (const key of uniqueKeys) processedKeys.add(key);
+
+    const values = await redis.mget(...uniqueKeys);
     for (const raw of values) {
       if (!raw) continue;
 
