@@ -100,18 +100,21 @@ function applyConflictRules(actions: PersonalizationAction[]): PersonalizationAc
   const hasCartReminder = actions.some((a) => a.type === ActionType.CART_REMINDER);
 
   if (hasDiscount && hasCartReminder) {
-    // Keep only higher-confidence one first, then keep other non-conflicting actions.
-    const sorted = actions.slice().sort((a, b) => b.reasoning.confidence - a.reasoning.confidence);
-    const top = sorted[0];
-    const filtered = sorted.filter(
-      (a) =>
-        a === top ||
-        !(
-          (a.type === ActionType.DISCOUNT_BANNER && top?.type === ActionType.CART_REMINDER) ||
-          (a.type === ActionType.CART_REMINDER && top?.type === ActionType.DISCOUNT_BANNER)
-        ),
-    );
-    return filtered;
+    const sortedByConfidence = actions
+      .slice()
+      .sort((a, b) => b.reasoning.confidence - a.reasoning.confidence);
+
+    const topAction = sortedByConfidence[0]!;
+
+    if (topAction.type === ActionType.CART_REMINDER) {
+      return sortedByConfidence.filter((a) => a.type !== ActionType.DISCOUNT_BANNER);
+    }
+
+    if (topAction.type === ActionType.DISCOUNT_BANNER) {
+      return sortedByConfidence.filter((a) => a.type !== ActionType.CART_REMINDER);
+    }
+
+    return sortedByConfidence;
   }
 
   return actions;
@@ -220,7 +223,7 @@ export async function getPersonalization(sessionId: string): Promise<{
   }
 
   const ranked = applyConflictRules(
-    dedupeByType(actions).sort((a, b) => b.reasoning.confidence - a.reasoning.confidence),
+    dedupeByType(actions.sort((a, b) => b.reasoning.confidence - a.reasoning.confidence)),
   ).slice(0, MAX_ACTIONS);
 
   const key = actionsKey(sessionId);
