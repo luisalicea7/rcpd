@@ -3,7 +3,7 @@ import { config } from "./index.js";
 type RedisPrimitive = string | number;
 
 type XReadEntry = [id: string, fields: string[]];
-type XReadStream = [stream: string, entries: XReadEntry[]];
+type XReadResult = Record<string, XReadEntry[]>;
 
 type RedisEvent = "connect" | "error";
 
@@ -99,8 +99,8 @@ class RedisAdapter {
     ]) as Promise<string | null>;
   }
 
-  xread(...args: RedisPrimitive[]): Promise<XReadStream[] | null> {
-    return this.client.send("XREAD", args.map((v) => String(v))) as Promise<XReadStream[] | null>;
+  xread(...args: RedisPrimitive[]): Promise<XReadResult | null> {
+    return this.client.send("XREAD", args.map((v) => String(v))) as Promise<XReadResult | null>;
   }
 
   scan(
