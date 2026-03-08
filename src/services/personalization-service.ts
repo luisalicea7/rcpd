@@ -29,12 +29,41 @@ function now(): number {
   return Date.now();
 }
 
+function isPersonalizationAction(value: unknown): value is PersonalizationAction {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+
+  const validType = Object.values(ActionType).includes(v.type as ActionType);
+
+  return (
+    typeof v.id === "string" &&
+    typeof v.sessionId === "string" &&
+    validType &&
+    v.payload !== null &&
+    typeof v.payload === "object" &&
+    typeof v.reasoning === "object" &&
+    v.reasoning !== null &&
+    typeof (v.reasoning as Record<string, unknown>).rule === "string" &&
+    typeof (v.reasoning as Record<string, unknown>).triggerCondition === "string" &&
+    typeof (v.reasoning as Record<string, unknown>).confidence === "number" &&
+    typeof (v.reasoning as Record<string, unknown>).explanation === "string" &&
+    typeof v.createdAt === "number" &&
+    Number.isFinite(v.createdAt)
+  );
+}
+
 async function getRecentActions(sessionId: string): Promise<PersonalizationAction[]> {
   try {
     const raw = await redis.get(actionsKey(sessionId));
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as PersonalizationAction[]) : [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    if (!parsed.every((item) => isPersonalizationAction(item))) {
+      return [];
+    }
+
+    return parsed;
   } catch {
     return [];
   }
@@ -140,27 +169,33 @@ export async function getPersonalization(sessionId: string): Promise<{
       },
       createdAt: currentTs,
     });
+  }
 
-    if (!isInCooldown(ActionType.PRODUCT_RECOMMENDATION, recentActions, currentTs)) {
-      const candidates = listProductsByCategory(topInterest.category, 6)
-        .slice(0, 3)
-        .map((p) => ({ id: p.id, name: p.name, price: p.price }));
+  if (
+    topInterest &&
+    topInterest.score >= 20 &&
+    !isInCooldown(ActionType.PRODUCT_RECOMMENDATION, recentActions, currentTs)
+  ) {
+    const candidates = listProductsByCategory(topInterest.category, 3).map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+    }));
 
-      if (candidates.length > 0) {
-        actions.push({
-          id: `act_${sessionId}_rec_${topInterest.category}`,
-          sessionId,
-          type: ActionType.PRODUCT_RECOMMENDATION,
-          payload: { category: topInterest.category, products: candidates },
-          reasoning: {
-            rule: "category_recommendation_from_interest",
-            triggerCondition: "top category score >= 20",
-            confidence: Math.min(88, topInterest.score + 8),
-            explanation: "Recommending products from the strongest interest category.",
-          },
-          createdAt: currentTs,
-        });
-      }
+    if (candidates.length > 0) {
+      actions.push({
+        id: `act_${sessionId}_rec_${topInterest.category}`,
+        sessionId,
+        type: ActionType.PRODUCT_RECOMMENDATION,
+        payload: { category: topInterest.category, products: candidates },
+        reasoning: {
+          rule: "category_recommendation_from_interest",
+          triggerCondition: "top category score >= 20",
+          confidence: Math.min(88, topInterest.score + 8),
+          explanation: "Recommending products from the strongest interest category.",
+        },
+        createdAt: currentTs,
+      });
     }
   }
 
