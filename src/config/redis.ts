@@ -1,3 +1,4 @@
+import { RedisClient as BunRedisClient } from "bun";
 import { config } from "./index.js";
 
 type RedisPrimitive = string | number;
@@ -8,7 +9,7 @@ type XReadResult = Record<string, XReadEntry[]>;
 type RedisEvent = "connect" | "error";
 
 class RedisAdapter {
-  private client: Bun.RedisClient;
+  private client: BunRedisClient;
   private listeners: {
     connect: Array<() => void>;
     error: Array<(err: unknown) => void>;
@@ -18,15 +19,19 @@ class RedisAdapter {
   };
 
   constructor(url: string) {
-    this.client = new Bun.RedisClient(url);
+    this.client = new BunRedisClient(url);
   }
 
   async connect(): Promise<void> {
     try {
       await this.client.connect();
-      this.listeners.connect.forEach((cb) => cb());
+      this.listeners.connect.forEach((cb) => {
+        cb();
+      });
     } catch (err) {
-      this.listeners.error.forEach((cb) => cb(err));
+      this.listeners.error.forEach((cb) => {
+        cb(err);
+      });
       throw err;
     }
   }
@@ -131,8 +136,8 @@ void redis.connect();
 
 // Dedicated client for the blocking XREADGROUP call in the event consumer.
 // Keeps the main client free for regular operations during blocking reads.
-export function createConsumerClient(): RedisClient {
+export async function createConsumerClient(): Promise<RedisClient> {
   const client = new RedisAdapter(config.REDIS_URL);
-  void client.connect();
+  await client.connect();
   return client;
 }
