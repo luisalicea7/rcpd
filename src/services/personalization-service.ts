@@ -13,12 +13,14 @@ const ACTIONS_KEY_PREFIX = "actions";
 const ACTIONS_TTL_SECONDS = 60 * 60 * 24;
 const MAX_ACTIONS = 3;
 
-const ACTION_COOLDOWNS_MS: Record<ActionType, number> = {
+const ACTION_COOLDOWNS_MS: Record<
+  Exclude<ActionType, ActionType.URGENCY_ALERT>,
+  number
+> = {
   [ActionType.CART_REMINDER]: 30 * 60 * 1000,
   [ActionType.DISCOUNT_BANNER]: 60 * 60 * 1000,
   [ActionType.CATEGORY_HIGHLIGHT]: 15 * 60 * 1000,
   [ActionType.PRODUCT_RECOMMENDATION]: 20 * 60 * 1000,
-  [ActionType.URGENCY_ALERT]: 45 * 60 * 1000,
 };
 
 function actionsKey(sessionId: string): string {
@@ -70,7 +72,7 @@ async function getRecentActions(sessionId: string): Promise<PersonalizationActio
 }
 
 function isInCooldown(
-  actionType: ActionType,
+  actionType: Exclude<ActionType, ActionType.URGENCY_ALERT>,
   recent: PersonalizationAction[],
   nowTs: number,
 ): boolean {
@@ -96,28 +98,19 @@ function dedupeByType(actions: PersonalizationAction[]): PersonalizationAction[]
 }
 
 function applyConflictRules(actions: PersonalizationAction[]): PersonalizationAction[] {
-  const hasDiscount = actions.some((a) => a.type === ActionType.DISCOUNT_BANNER);
-  const hasCartReminder = actions.some((a) => a.type === ActionType.CART_REMINDER);
+  const discountAction = actions.find((a) => a.type === ActionType.DISCOUNT_BANNER);
+  const cartReminderAction = actions.find((a) => a.type === ActionType.CART_REMINDER);
 
-  if (hasDiscount && hasCartReminder) {
-    const sortedByConfidence = actions
-      .slice()
-      .sort((a, b) => b.reasoning.confidence - a.reasoning.confidence);
-
-    const topAction = sortedByConfidence[0]!;
-
-    if (topAction.type === ActionType.CART_REMINDER) {
-      return sortedByConfidence.filter((a) => a.type !== ActionType.DISCOUNT_BANNER);
-    }
-
-    if (topAction.type === ActionType.DISCOUNT_BANNER) {
-      return sortedByConfidence.filter((a) => a.type !== ActionType.CART_REMINDER);
-    }
-
-    return sortedByConfidence;
+  if (!discountAction || !cartReminderAction) {
+    return actions;
   }
 
-  return actions;
+  const loserType =
+    discountAction.reasoning.confidence >= cartReminderAction.reasoning.confidence
+      ? ActionType.CART_REMINDER
+      : ActionType.DISCOUNT_BANNER;
+
+  return actions.filter((a) => a.type !== loserType);
 }
 
 export async function getPersonalization(sessionId: string): Promise<{
