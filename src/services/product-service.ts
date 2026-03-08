@@ -87,3 +87,10 @@ export function getCatalogStats(): {
     categories: [...PRECOMPUTED_CATALOG.categories],
   };
 }
+
+export function listProductsByCategory(category: string, limit = 12): Product[] {
+  return PRODUCTS.filter((p) => p.category.toLowerCase() === category.toLowerCase()).slice(
+    0,
+    limit,
+  );
+}
