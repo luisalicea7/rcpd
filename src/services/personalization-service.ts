@@ -1,5 +1,3 @@
-// NOTE: Redis client remains shared ioredis adapter for now.
-// Bun.redis migration is tracked as separate infrastructure work.
 import { redis } from "../config/redis.js";
 import { getProfile } from "./profile-service.js";
 import { logger } from "../utils/logger.js";

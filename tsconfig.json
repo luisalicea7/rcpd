@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
+    "types": ["bun-types"],
     "noEmit": false,
     "outDir": "./dist",
     "sourceMap": true,
