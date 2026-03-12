@@ -85,13 +85,18 @@ async function ensureConsumerGroup(client: RedisClient): Promise<void> {
 
 async function isDuplicateEvent(event: AppEvent, eventId: string): Promise<boolean> {
   const key = dedupeKey(event.sessionId);
+  const setResult = await redis.set(key, eventId, "NX", "EX", 60 * 60 * 24);
+
+  if (setResult === "OK") {
+    return false;
+  }
+
   const currentMarker = await redis.get(key);
   if (currentMarker === eventId) {
     return true;
   }
 
-  await redis.set(key, eventId, "EX", 60 * 60 * 24);
-  return false;
+  return true;
 }
 
 async function processEntry(client: RedisClient, id: string, fields: string[]): Promise<boolean> {
@@ -125,6 +130,16 @@ async function processEntry(client: RedisClient, id: string, fields: string[]): 
   });
 
   await client.xack(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, id);
+
+  try {
+    await client.xtrimMaxLen(EVENTS_STREAM_KEY, config.EVENTS_STREAM_MAXLEN, true);
+  } catch (err) {
+    logger.warn(
+      { err, streamKey: EVENTS_STREAM_KEY, maxLen: config.EVENTS_STREAM_MAXLEN },
+      "Failed to trim events stream post-ack",
+    );
+  }
+
   return true;
 }
 
@@ -178,20 +193,25 @@ async function reclaimStalePending(client: RedisClient): Promise<number> {
 
 export async function consumeProfileEventsOnce(batchSize = config.PROFILE_CONSUMER_BATCH_SIZE): Promise<number> {
   const client = await createConsumerClient();
-  await ensureConsumerGroup(client);
 
-  await reclaimStalePending(client);
+  try {
+    await ensureConsumerGroup(client);
 
-  const results = await client.xreadgroup(
-    config.PROFILE_CONSUMER_GROUP,
-    config.PROFILE_CONSUMER_NAME,
-    batchSize,
-    1,
-    EVENTS_STREAM_KEY,
-    ">",
-  );
+    await reclaimStalePending(client);
 
-  return processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+    const results = await client.xreadgroup(
+      config.PROFILE_CONSUMER_GROUP,
+      config.PROFILE_CONSUMER_NAME,
+      batchSize,
+      1,
+      EVENTS_STREAM_KEY,
+      ">",
+    );
+
+    return processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+  } finally {
+    client.close();
+  }
 }
 
 export async function consumeProfileEventsLoop(intervalMs = 2000): Promise<void> {

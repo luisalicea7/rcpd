@@ -63,14 +63,31 @@ class RedisAdapter {
     return this.client.mget(...keys);
   }
 
-  set(key: string, value: string): Promise<string>;
-  set(key: string, value: string, mode: "EX", seconds: number): Promise<string>;
-  set(key: string, value: string, mode?: "EX", seconds?: number): Promise<string> {
-    if (mode === "EX" && typeof seconds === "number") {
-      return this.client.send("SET", [key, value, mode, String(seconds)]) as Promise<string>;
+  set(key: string, value: string): Promise<string | null>;
+  set(key: string, value: string, mode: "EX", seconds: number): Promise<string | null>;
+  set(
+    key: string,
+    value: string,
+    mode1: "NX" | "XX",
+    mode2: "EX",
+    seconds: number,
+  ): Promise<string | null>;
+  set(
+    key: string,
+    value: string,
+    mode?: "EX" | "NX" | "XX",
+    arg2?: number | "EX",
+    arg3?: number,
+  ): Promise<string | null> {
+    if (mode === "EX" && typeof arg2 === "number") {
+      return this.client.send("SET", [key, value, mode, String(arg2)]) as Promise<string | null>;
     }
 
-    return this.client.set(key, value);
+    if ((mode === "NX" || mode === "XX") && arg2 === "EX" && typeof arg3 === "number") {
+      return this.client.send("SET", [key, value, mode, arg2, String(arg3)]) as Promise<string | null>;
+    }
+
+    return this.client.set(key, value) as Promise<string | null>;
   }
 
   expire(key: string, seconds: number): Promise<number> {
@@ -159,6 +176,32 @@ class RedisAdapter {
   xtrimMaxLen(streamKey: string, maxLen: number, approximate = true): Promise<number> {
     const args = [streamKey, "MAXLEN", ...(approximate ? ["~"] : []), String(maxLen)];
     return this.client.send("XTRIM", args) as Promise<number>;
+  }
+
+  eval(script: string, keys: string[], args: string[]): Promise<unknown> {
+    return this.client.send("EVAL", [script, String(keys.length), ...keys, ...args]);
+  }
+
+  close(): void {
+    const client = this.client as unknown as {
+      close?: () => void;
+      disconnect?: () => void;
+      quit?: () => void | Promise<unknown>;
+    };
+
+    if (typeof client.close === "function") {
+      client.close();
+      return;
+    }
+
+    if (typeof client.disconnect === "function") {
+      client.disconnect();
+      return;
+    }
+
+    if (typeof client.quit === "function") {
+      void client.quit();
+    }
   }
 
   scan(

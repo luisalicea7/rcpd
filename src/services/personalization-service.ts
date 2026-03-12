@@ -67,7 +67,7 @@ function parseActionList(raw: string | null): PersonalizationAction[] {
 }
 
 async function getRecentActions(sessionId: string): Promise<PersonalizationAction[]> {
-  return parseActionList(await redis.get(actionsKey(sessionId)));
+  return parseActionList(await redis.get(actionsHistoryKey(sessionId)));
 }
 
 export async function getPersonalizationHistory(sessionId: string): Promise<PersonalizationAction[]> {
@@ -78,14 +78,60 @@ async function saveActionCaches(sessionId: string, actions: PersonalizationActio
   const latestKey = actionsKey(sessionId);
   const historyKey = actionsHistoryKey(sessionId);
 
-  const existingHistory = await getPersonalizationHistory(sessionId);
-  const mergedHistory = [...actions, ...existingHistory]
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, MAX_ACTION_HISTORY);
+  const mergeAndCacheScript = `
+local latestKey = KEYS[1]
+local historyKey = KEYS[2]
+local actionsJson = ARGV[1]
+local ttlSeconds = tonumber(ARGV[2])
+local maxHistory = tonumber(ARGV[3])
 
-  await Promise.all([
-    redis.set(latestKey, JSON.stringify(actions), "EX", ACTIONS_TTL_SECONDS),
-    redis.set(historyKey, JSON.stringify(mergedHistory), "EX", ACTIONS_TTL_SECONDS),
+local existingRaw = redis.call("GET", historyKey)
+local existing = {}
+if existingRaw then
+  local ok, parsed = pcall(cjson.decode, existingRaw)
+  if ok and type(parsed) == "table" then
+    existing = parsed
+  end
+end
+
+local incoming = {}
+do
+  local ok, parsed = pcall(cjson.decode, actionsJson)
+  if ok and type(parsed) == "table" then
+    incoming = parsed
+  end
+end
+
+local merged = {}
+for i = 1, #incoming do
+  merged[#merged + 1] = incoming[i]
+end
+for i = 1, #existing do
+  merged[#merged + 1] = existing[i]
+end
+
+table.sort(merged, function(a, b)
+  local aCreated = (type(a) == "table" and tonumber(a.createdAt)) or 0
+  local bCreated = (type(b) == "table" and tonumber(b.createdAt)) or 0
+  return aCreated > bCreated
+end)
+
+if #merged > maxHistory then
+  for i = #merged, maxHistory + 1, -1 do
+    merged[i] = nil
+  end
+end
+
+redis.call("SET", latestKey, actionsJson, "EX", ttlSeconds)
+redis.call("SET", historyKey, cjson.encode(merged), "EX", ttlSeconds)
+
+return #merged
+`;
+
+  await redis.eval(mergeAndCacheScript, [latestKey, historyKey], [
+    JSON.stringify(actions),
+    String(ACTIONS_TTL_SECONDS),
+    String(MAX_ACTION_HISTORY),
   ]);
 }
 
