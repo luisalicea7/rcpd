@@ -34,7 +34,9 @@ app.route("/api/profile", profileRoutes);
 app.route("/api/personalization", personalizationRoutes);
 app.route("/api/metrics", metricsRoutes);
 
-export function mountBackstageRoutes(upgradeWebSocket: any): void {
+export function mountBackstageRoutes(
+  upgradeWebSocket: Parameters<typeof createBackstageRoutes>[0],
+): void {
   app.route("/api/backstage", createBackstageRoutes(upgradeWebSocket));
 }
 

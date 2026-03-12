@@ -1,8 +1,8 @@
-import { Hono, type Context } from "hono";
+import { Hono, type Context, type MiddlewareHandler } from "hono";
 import { backstageManager } from "../services/backstage-manager.js";
 import { requireSessionId } from "../utils/session-context.js";
 
-type UpgradeWebSocket = (handler: (c: Context) => Record<string, unknown>) => (c: Context) => Response;
+type UpgradeWebSocket = (handler: (c: Context) => Record<string, unknown>) => MiddlewareHandler;
 
 export function createBackstageRoutes(upgradeWebSocket: UpgradeWebSocket): Hono {
   const backstageRoutes = new Hono();

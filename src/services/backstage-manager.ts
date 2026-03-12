@@ -60,12 +60,18 @@ class BackstageManager {
     for (const ws of set) {
       try {
         if (typeof ws.readyState === "number" && ws.readyState !== OPEN_STATE) {
+          set.delete(ws);
           continue;
         }
         ws.send(encoded);
       } catch (err) {
+        set.delete(ws);
         logger.warn({ err, sessionId: args.sessionId, type }, "Failed to send backstage WS message");
       }
+    }
+
+    if (set.size === 0) {
+      this.clients.delete(args.sessionId);
     }
   }
 }

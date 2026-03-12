@@ -1,5 +1,4 @@
-import { serve } from "@hono/node-server";
-import { createNodeWebSocket } from "@hono/node-ws";
+import { createBunWebSocket } from "hono/bun";
 import { app, mountBackstageRoutes } from "./app.js";
 import { config } from "./config/index.js";
 import { redis } from "./config/redis.js";
@@ -10,15 +9,14 @@ async function bootstrap(): Promise<void> {
     await redis.ping();
     logger.info("Redis connection verified");
 
-    const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+    const { upgradeWebSocket, websocket } = createBunWebSocket();
     mountBackstageRoutes(upgradeWebSocket);
 
-    const server = serve({
+    Bun.serve({
       fetch: app.fetch,
       port: config.PORT,
+      websocket,
     });
-
-    injectWebSocket(server);
 
     logger.info({ port: config.PORT }, "RPD backend started");
   } catch (err) {

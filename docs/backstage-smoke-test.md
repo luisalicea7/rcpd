@@ -7,20 +7,42 @@ bun run dev
 bun run consume:profile:loop
 ```
 
-## 2) Open WebSocket connection
+## 2) Create session + consent cookie jar first
 
-Use the same session cookie context used by API calls.
+Backstage WS is session-scoped. You must create and reuse the same cookie state.
+
+```bash
+# establish session cookie
+curl -i -c cookies.txt http://localhost:3000/api/consent/status
+
+# grant consent using same cookie jar
+curl -i -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/consent/grant
+```
+
+## 3) Extract Cookie header from cookies.txt
+
+```bash
+COOKIE_HEADER=$(awk '($0 !~ /^#/ && $6 != "") {printf "%s=%s; ", $6, $7}' cookies.txt | sed 's/; $//')
+echo "$COOKIE_HEADER"
+```
+
+## 4) Open WebSocket with the same Cookie header
 
 Example with `wscat`:
 
 ```bash
-wscat -c ws://localhost:3000/api/backstage/ws
+wscat -c ws://localhost:3000/api/backstage/ws -H "Cookie: $COOKIE_HEADER"
 ```
 
-## 3) Trigger events
+Alternative (`websocat`):
 
 ```bash
-# assumes consent already granted and same cookie jar
+websocat -H="Cookie: $COOKIE_HEADER" ws://localhost:3000/api/backstage/ws
+```
+
+## 5) Trigger events using the same cookie jar
+
+```bash
 curl -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/events/product-view \
   -H 'content-type: application/json' \
   -d '{"productId":"ele-001","viewDuration":12000}'
@@ -29,19 +51,21 @@ curl -b cookies.txt -c cookies.txt -X POST http://localhost:3000/api/events/add-
   -H 'content-type: application/json' \
   -d '{"productId":"ele-001","quantity":1}'
 
+# optional: preserve correlation from prior event id
+# curl -b cookies.txt -c cookies.txt -H "x-trace-id: <stream-id>" http://localhost:3000/api/personalization/me
 curl -b cookies.txt -c cookies.txt http://localhost:3000/api/personalization/me
 ```
 
-## 4) Verify WS messages
+## 6) Verify WS messages
 
-You should observe ordered messages per trace pipeline:
+You should observe ordered pipeline messages per trace:
 
 1. `capture`
 2. `learn`
 3. `decide`
 4. `explain`
 
-## 5) Check status endpoint
+## 7) Check status endpoint
 
 ```bash
 curl http://localhost:3000/api/backstage/status

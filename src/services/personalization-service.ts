@@ -112,7 +112,10 @@ function applyConflictRules(actions: PersonalizationAction[]): PersonalizationAc
   return actions.filter((a) => a.type !== loserType);
 }
 
-export async function getPersonalization(sessionId: string): Promise<{
+export async function getPersonalization(
+  sessionId: string,
+  traceId?: string,
+): Promise<{
   sessionId: string;
   generatedAt: number;
   actions: PersonalizationAction[];
@@ -218,12 +221,12 @@ export async function getPersonalization(sessionId: string): Promise<{
     dedupeByType(actions.sort((a, b) => b.reasoning.confidence - a.reasoning.confidence)),
   ).slice(0, MAX_ACTIONS);
 
-  const traceId = `pers_${sessionId}_${currentTs}`;
+  const correlationTraceId = traceId;
   for (const action of ranked) {
     backstageManager.emit("decide", {
       sessionId,
       eventId: action.id,
-      traceId,
+      traceId: correlationTraceId,
       payload: {
         ruleId: action.reasoning.rule,
         matched: true,
@@ -235,7 +238,7 @@ export async function getPersonalization(sessionId: string): Promise<{
     backstageManager.emit("explain", {
       sessionId,
       eventId: action.id,
-      traceId,
+      traceId: correlationTraceId,
       payload: {
         title: `${action.type} triggered`,
         reason: action.reasoning.triggerCondition,
