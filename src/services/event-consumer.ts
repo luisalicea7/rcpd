@@ -212,25 +212,49 @@ export async function consumeProfileEventsOnce(batchSize = config.PROFILE_CONSUM
 
 export async function consumeProfileEventsLoop(intervalMs = 2000): Promise<void> {
   const client = await createConsumerClient();
-  await ensureConsumerGroup(client);
+  let shuttingDown = false;
 
-  while (true) {
+  const shutdownHandler = (signal: NodeJS.Signals): void => {
+    shuttingDown = true;
+    logger.info({ signal }, "Profile consumer shutdown requested");
+  };
+
+  process.on("SIGINT", shutdownHandler);
+  process.on("SIGTERM", shutdownHandler);
+
+  try {
+    await ensureConsumerGroup(client);
+
+    while (!shuttingDown) {
+      try {
+        await reclaimStalePending(client);
+
+        const results = await client.xreadgroup(
+          config.PROFILE_CONSUMER_GROUP,
+          config.PROFILE_CONSUMER_NAME,
+          config.PROFILE_CONSUMER_BATCH_SIZE,
+          config.PROFILE_CONSUMER_BLOCK_MS,
+          EVENTS_STREAM_KEY,
+          ">",
+        );
+
+        await processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+      } catch (err) {
+        logger.error({ err, intervalMs }, "Profile consumer iteration failed");
+
+        if (!shuttingDown) {
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+      }
+    }
+  } finally {
+    process.off("SIGINT", shutdownHandler);
+    process.off("SIGTERM", shutdownHandler);
+
     try {
-      await reclaimStalePending(client);
-
-      const results = await client.xreadgroup(
-        config.PROFILE_CONSUMER_GROUP,
-        config.PROFILE_CONSUMER_NAME,
-        config.PROFILE_CONSUMER_BATCH_SIZE,
-        config.PROFILE_CONSUMER_BLOCK_MS,
-        EVENTS_STREAM_KEY,
-        ">",
-      );
-
-      await processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+      client.close();
     } catch (err) {
-      logger.error({ err, intervalMs }, "Profile consumer iteration failed");
-      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      logger.error({ err }, "Error while closing profile consumer Redis client");
     }
   }
 }

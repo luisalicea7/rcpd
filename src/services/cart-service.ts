@@ -90,7 +90,11 @@ export async function getCart(sessionId: string): Promise<Cart> {
     }
 
     await redis.expire(key, config.SESSION_TTL);
-    await trackSessionKey(sessionId, key);
+    try {
+      await trackSessionKey(sessionId, key);
+    } catch (err) {
+      logger.warn({ err, sessionId, key }, "Failed to track session key for cart read (best-effort)");
+    }
 
     return recalculate(parsed, true);
   } catch {
@@ -215,35 +219,190 @@ export async function addCartItem(
   return addCartItemAtomic(sessionId, product, quantity);
 }
 
+async function updateCartItemQuantityAtomic(
+  sessionId: string,
+  itemId: string,
+  quantity: number,
+): Promise<Cart | null> {
+  const key = cartKey(sessionId);
+
+  const script = `
+local key = KEYS[1]
+local sessionId = ARGV[1]
+local ttl = tonumber(ARGV[2])
+local itemId = ARGV[3]
+local quantity = tonumber(ARGV[4])
+local now = tonumber(ARGV[5])
+
+local raw = redis.call("GET", key)
+if not raw then
+  return nil
+end
+
+local ok, cart = pcall(cjson.decode, raw)
+if not ok or type(cart) ~= "table" or type(cart.items) ~= "table" then
+  return nil
+end
+
+local found = false
+for i = 1, #cart.items do
+  local item = cart.items[i]
+  if item.id == itemId then
+    item.quantity = quantity
+    item.updatedAt = now
+    found = true
+    break
+  end
+end
+
+if not found then
+  return nil
+end
+
+local totalItems = 0
+local subtotal = 0
+for i = 1, #cart.items do
+  local item = cart.items[i]
+  local itemQty = tonumber(item.quantity or 0)
+  local itemPrice = tonumber(item.price or 0)
+  totalItems = totalItems + itemQty
+  subtotal = subtotal + (itemPrice * itemQty)
+end
+
+cart.sessionId = sessionId
+cart.totalItems = totalItems
+cart.subtotal = math.floor((subtotal + 0.0000001) * 100) / 100
+cart.updatedAt = now
+
+local encoded = cjson.encode(cart)
+redis.call("SET", key, encoded, "EX", ttl)
+return encoded
+`;
+
+  const result = await redis.eval(script, [key], [
+    sessionId,
+    String(config.SESSION_TTL),
+    itemId,
+    String(quantity),
+    String(Date.now()),
+  ]);
+
+  if (result === null) {
+    return null;
+  }
+
+  if (typeof result !== "string") {
+    throw new Error("Unexpected Redis response while updating cart item atomically");
+  }
+
+  const parsed: unknown = JSON.parse(result);
+  if (!isValidCart(parsed)) {
+    throw new Error("Invalid cart payload from atomic update operation");
+  }
+
+  try {
+    await trackSessionKey(sessionId, key);
+  } catch (err) {
+    logger.warn({ err, sessionId, key }, "Failed to track session key for cart (best-effort)");
+  }
+
+  return parsed;
+}
+
+async function removeCartItemAtomic(sessionId: string, itemId: string): Promise<Cart | null> {
+  const key = cartKey(sessionId);
+
+  const script = `
+local key = KEYS[1]
+local sessionId = ARGV[1]
+local ttl = tonumber(ARGV[2])
+local itemId = ARGV[3]
+local now = tonumber(ARGV[4])
+
+local raw = redis.call("GET", key)
+if not raw then
+  return nil
+end
+
+local ok, cart = pcall(cjson.decode, raw)
+if not ok or type(cart) ~= "table" or type(cart.items) ~= "table" then
+  return nil
+end
+
+local nextItems = {}
+local removed = false
+for i = 1, #cart.items do
+  local item = cart.items[i]
+  if item.id == itemId then
+    removed = true
+  else
+    nextItems[#nextItems + 1] = item
+  end
+end
+
+if not removed then
+  return nil
+end
+
+cart.items = nextItems
+
+local totalItems = 0
+local subtotal = 0
+for i = 1, #cart.items do
+  local item = cart.items[i]
+  local itemQty = tonumber(item.quantity or 0)
+  local itemPrice = tonumber(item.price or 0)
+  totalItems = totalItems + itemQty
+  subtotal = subtotal + (itemPrice * itemQty)
+end
+
+cart.sessionId = sessionId
+cart.totalItems = totalItems
+cart.subtotal = math.floor((subtotal + 0.0000001) * 100) / 100
+cart.updatedAt = now
+
+local encoded = cjson.encode(cart)
+redis.call("SET", key, encoded, "EX", ttl)
+return encoded
+`;
+
+  const result = await redis.eval(script, [key], [
+    sessionId,
+    String(config.SESSION_TTL),
+    itemId,
+    String(Date.now()),
+  ]);
+
+  if (result === null) {
+    return null;
+  }
+
+  if (typeof result !== "string") {
+    throw new Error("Unexpected Redis response while removing cart item atomically");
+  }
+
+  const parsed: unknown = JSON.parse(result);
+  if (!isValidCart(parsed)) {
+    throw new Error("Invalid cart payload from atomic remove operation");
+  }
+
+  try {
+    await trackSessionKey(sessionId, key);
+  } catch (err) {
+    logger.warn({ err, sessionId, key }, "Failed to track session key for cart (best-effort)");
+  }
+
+  return parsed;
+}
+
 export async function updateCartItemQuantity(
   sessionId: string,
   itemId: string,
   quantity: number,
 ): Promise<Cart | null> {
-  const current = await getCart(sessionId);
-  const hasItem = current.items.some((item) => item.id === itemId);
-  if (!hasItem) return null;
-
-  const nextItems = current.items.map((item) =>
-    item.id === itemId ? { ...item, quantity, updatedAt: Date.now() } : item,
-  );
-
-  return saveCart(sessionId, {
-    ...current,
-    items: nextItems,
-  });
+  return updateCartItemQuantityAtomic(sessionId, itemId, quantity);
 }
 
 export async function removeCartItem(sessionId: string, itemId: string): Promise<Cart | null> {
-  const current = await getCart(sessionId);
-  const nextItems = current.items.filter((item) => item.id !== itemId);
-
-  if (nextItems.length === current.items.length) {
-    return null;
-  }
-
-  return saveCart(sessionId, {
-    ...current,
-    items: nextItems,
-  });
+  return removeCartItemAtomic(sessionId, itemId);
 }
