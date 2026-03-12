@@ -1,9 +1,14 @@
 import { logger } from "../utils/logger.js";
-import type { BackstageMessage, BackstageMessageType } from "../types/backstage.js";
+import type {
+  BackstageMessage,
+  BackstageMessageType,
+  BackstagePayloadByType,
+} from "../types/backstage.js";
 
-type SocketLike = {
+export type SocketLike = {
   readyState?: number;
-  send: (data: string) => void;
+  send?: (data: string) => void;
+  close?: () => void;
 };
 
 const OPEN_STATE = 1;
@@ -33,19 +38,19 @@ class BackstageManager {
     return count;
   }
 
-  emit<TPayload extends Record<string, unknown>>(
-    type: BackstageMessageType,
+  emit<K extends BackstageMessageType>(
+    type: K,
     args: {
       sessionId: string;
       eventId: string;
       traceId?: string;
-      payload: TPayload;
+      payload: BackstagePayloadByType[K];
     },
   ): void {
     const set = this.clients.get(args.sessionId);
     if (!set || set.size === 0) return;
 
-    const message: BackstageMessage<TPayload> = {
+    const message: BackstageMessage<K> = {
       type,
       sessionId: args.sessionId,
       timestamp: new Date().toISOString(),
@@ -60,6 +65,10 @@ class BackstageManager {
     for (const ws of set) {
       try {
         if (typeof ws.readyState === "number" && ws.readyState !== OPEN_STATE) {
+          set.delete(ws);
+          continue;
+        }
+        if (typeof ws.send !== "function") {
           set.delete(ws);
           continue;
         }

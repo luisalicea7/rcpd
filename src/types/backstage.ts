@@ -1,15 +1,5 @@
 export type BackstageMessageType = "capture" | "learn" | "decide" | "explain";
 
-export interface BackstageMessage<TPayload = Record<string, unknown>> {
-  type: BackstageMessageType;
-  sessionId: string;
-  timestamp: string;
-  eventId: string;
-  traceId: string;
-  version: "v1";
-  payload: TPayload;
-}
-
 export interface CapturePayload {
   eventType: string;
   source: string;
@@ -44,4 +34,21 @@ export interface ExplainPayload {
     type: string;
     params: Record<string, unknown>;
   };
+}
+
+export interface BackstagePayloadByType {
+  capture: CapturePayload;
+  learn: LearnPayload;
+  decide: DecidePayload;
+  explain: ExplainPayload;
+}
+
+export interface BackstageMessage<K extends BackstageMessageType = BackstageMessageType> {
+  type: K;
+  sessionId: string;
+  timestamp: string;
+  eventId: string;
+  traceId: string;
+  version: "v1";
+  payload: BackstagePayloadByType[K];
 }
