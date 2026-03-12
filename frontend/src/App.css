@@ -1,0 +1,80 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  max-width: 720px;
+  margin: 4rem auto;
+  padding: 0 1rem;
+}
+
+.subtitle {
+  margin-top: -0.25rem;
+  color: #4b5563;
+}
+
+.card {
+  margin-top: 1.5rem;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.label {
+  color: #6b7280;
+}
+
+code {
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+}
+
+.error {
+  color: #b91c1c;
+  margin: 0.75rem 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-weight: 600;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #374151;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -35,6 +35,37 @@ bun run dev
 
 Server runs on `http://localhost:3000` by default.
 
+## Frontend (PR1 foundation)
+
+A React + TypeScript + Vite app now lives in `frontend/` with a minimal consent flow UI.
+
+### Frontend quick start
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Frontend defaults to `http://localhost:5173`.
+
+### Required frontend env vars
+
+- `VITE_API_BASE_URL` (default in example: `http://localhost:3000`)
+
+### CORS + cookie/credentials assumptions
+
+The frontend API client always sends `credentials: "include"` so the backend session cookie can be created and reused.
+
+That means the backend CORS config must:
+
+- allow the frontend origin (for local dev: `http://localhost:5173`)
+- set `Access-Control-Allow-Credentials: true`
+- return a specific `Access-Control-Allow-Origin` (not `*`) when credentials are enabled
+
+If CORS is misconfigured, consent status/grant/revoke requests from the frontend will fail even if endpoints work via curl.
+
 ## API endpoints (current)
 
 - Health:
