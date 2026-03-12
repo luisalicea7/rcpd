@@ -47,10 +47,20 @@ Server runs on `http://localhost:3000` by default.
   - `GET /api/products`
   - `GET /api/products/:id`
 - Events:
+  - `POST /api/events/page-view`
   - `POST /api/events/product-view`
   - `POST /api/events/search`
   - `POST /api/events/add-to-cart`
   - `POST /api/events/remove-from-cart`
+  - `POST /api/events/idle`
+  - `POST /api/events/click`
+  - `POST /api/events/scroll`
+  - `POST /api/events/filter-change`
+- Cart:
+  - `GET /api/cart`
+  - `POST /api/cart/items`
+  - `PATCH /api/cart/items/:id`
+  - `DELETE /api/cart/items/:id`
 - Profile:
   - `GET /api/profile/me` (legacy)
   - `GET /api/profile` (compat shape)
