@@ -2,6 +2,7 @@ import { redis } from "../config/redis.js";
 import type { AppEvent } from "../types/events.js";
 import { logger } from "../utils/logger.js";
 import { updateProfileFromEvent } from "./profile-service.js";
+import { backstageManager } from "./backstage-manager.js";
 
 const EVENTS_STREAM_KEY = "rpd:events";
 const CONSUMER_CURSOR_KEY = "consumer:profile:lastId";
@@ -74,7 +75,24 @@ export async function consumeProfileEventsOnce(batchSize = 50): Promise<number> 
         continue;
       }
 
-      await updateProfileFromEvent(event);
+      const updatedProfile = await updateProfileFromEvent(event);
+
+      const topInterest = updatedProfile.interests.slice().sort((a, b) => b.score - a.score)[0];
+
+      backstageManager.emit("learn", {
+        sessionId: event.sessionId,
+        eventId: id,
+        traceId: id,
+        payload: {
+          profileDelta: {
+            topCategory: topInterest?.category,
+            newInterestScore: topInterest?.score,
+            avgViewedPrice: updatedProfile.priceStats?.avg,
+            abandonmentRisk: updatedProfile.abandonmentRisk.score,
+          },
+        },
+      });
+
       processed += 1;
       await redis.set(CONSUMER_CURSOR_KEY, id);
     }

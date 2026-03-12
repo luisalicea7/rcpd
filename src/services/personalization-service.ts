@@ -6,6 +6,7 @@ import {
   type PersonalizationAction,
 } from "../types/personalization.js";
 import { listProductsByCategory } from "./product-service.js";
+import { backstageManager } from "./backstage-manager.js";
 
 const ACTIONS_KEY_PREFIX = "actions";
 const ACTIONS_TTL_SECONDS = 60 * 60 * 24;
@@ -216,6 +217,37 @@ export async function getPersonalization(sessionId: string): Promise<{
   const ranked = applyConflictRules(
     dedupeByType(actions.sort((a, b) => b.reasoning.confidence - a.reasoning.confidence)),
   ).slice(0, MAX_ACTIONS);
+
+  const traceId = `pers_${sessionId}_${currentTs}`;
+  for (const action of ranked) {
+    backstageManager.emit("decide", {
+      sessionId,
+      eventId: action.id,
+      traceId,
+      payload: {
+        ruleId: action.reasoning.rule,
+        matched: true,
+        confidence: Number((action.reasoning.confidence / 100).toFixed(2)),
+        actionType: action.type,
+      },
+    });
+
+    backstageManager.emit("explain", {
+      sessionId,
+      eventId: action.id,
+      traceId,
+      payload: {
+        title: `${action.type} triggered`,
+        reason: action.reasoning.triggerCondition,
+        humanText: action.reasoning.explanation,
+        action: {
+          id: action.id,
+          type: action.type,
+          params: action.payload,
+        },
+      },
+    });
+  }
 
   const key = actionsKey(sessionId);
   try {

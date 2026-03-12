@@ -9,6 +9,7 @@ import { profileRoutes } from "./routes/profile.js";
 import { personalizationRoutes } from "./routes/personalization.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { logger } from "./utils/logger.js";
+import { createBackstageRoutes } from "./routes/backstage.js";
 
 export const app = new Hono();
 
@@ -32,6 +33,10 @@ app.route("/api/events", eventsRoutes);
 app.route("/api/profile", profileRoutes);
 app.route("/api/personalization", personalizationRoutes);
 app.route("/api/metrics", metricsRoutes);
+
+export function mountBackstageRoutes(upgradeWebSocket: any): void {
+  app.route("/api/backstage", createBackstageRoutes(upgradeWebSocket));
+}
 
 app.onError((err, c) => {
   logger.error({ err, path: c.req.path }, "Unhandled application error");
