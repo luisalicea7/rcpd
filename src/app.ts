@@ -8,6 +8,7 @@ import { eventsRoutes } from "./routes/events.js";
 import { profileRoutes } from "./routes/profile.js";
 import { personalizationRoutes } from "./routes/personalization.js";
 import { metricsRoutes } from "./routes/metrics.js";
+import { cartRoutes } from "./routes/cart.js";
 import { logger } from "./utils/logger.js";
 import { createBackstageRoutes } from "./routes/backstage.js";
 
@@ -33,6 +34,7 @@ app.route("/api/events", eventsRoutes);
 app.route("/api/profile", profileRoutes);
 app.route("/api/personalization", personalizationRoutes);
 app.route("/api/metrics", metricsRoutes);
+app.route("/api/cart", cartRoutes);
 
 export function mountBackstageRoutes(
   upgradeWebSocket: Parameters<typeof createBackstageRoutes>[0],
