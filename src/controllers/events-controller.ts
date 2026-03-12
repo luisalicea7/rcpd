@@ -2,8 +2,13 @@ import type { Context } from "hono";
 import { z } from "zod";
 import {
   addToCartBodySchema,
+  clickEventBodySchema,
+  filterChangeEventBodySchema,
+  idleEventBodySchema,
+  pageViewBodySchema,
   productViewBodySchema,
   removeFromCartBodySchema,
+  scrollEventBodySchema,
   searchEventBodySchema,
 } from "../schemas/events.js";
 import { publishEvent } from "../services/event-producer.js";
@@ -13,8 +18,13 @@ import {
   EventType,
   type AddToCartEvent,
   type AppEvent,
+  type ClickEvent,
+  type FilterChangeEvent,
+  type IdleEvent,
+  type PageViewEvent,
   type ProductViewEvent,
   type RemoveFromCartEvent,
+  type ScrollEvent,
   type SearchEvent,
 } from "../types/events.js";
 import { logger } from "../utils/logger.js";
@@ -84,6 +94,10 @@ async function publishOr503(
       payload: {
         eventType,
         source: c.req.path,
+        page: "page" in event ? event.page : undefined,
+        element: "element" in event ? event.element : undefined,
+        filter: "filter" in event ? event.filter : undefined,
+        depth: "depth" in event ? event.depth : undefined,
         productId: "productId" in event ? event.productId : undefined,
         category: "category" in event ? event.category : undefined,
         price: "price" in event ? event.price : undefined,
@@ -104,6 +118,23 @@ async function publishOr503(
 
     return c.json({ ok: false, error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
   }
+}
+
+export async function createPageViewEventHandler(c: Context): Promise<Response> {
+  const parsedRequest = await parseEventRequest(c, pageViewBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
+
+  const { sessionId, data } = parsedRequest;
+
+  const event: PageViewEvent = {
+    type: EventType.PAGE_VIEW,
+    sessionId,
+    timestamp: Date.now(),
+    page: data.page,
+    referrer: data.referrer,
+  };
+
+  return publishOr503(c, sessionId, event.type, event);
 }
 
 export async function createProductViewEventHandler(c: Context): Promise<Response> {
@@ -185,6 +216,74 @@ export async function createRemoveFromCartEventHandler(c: Context): Promise<Resp
     timestamp: Date.now(),
     productId: data.productId,
     quantity: data.quantity,
+  };
+
+  return publishOr503(c, sessionId, event.type, event);
+}
+
+export async function createIdleEventHandler(c: Context): Promise<Response> {
+  const parsedRequest = await parseEventRequest(c, idleEventBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
+
+  const { sessionId, data } = parsedRequest;
+
+  const event: IdleEvent = {
+    type: EventType.IDLE,
+    sessionId,
+    timestamp: Date.now(),
+    idleDuration: data.idleDuration,
+    page: data.page,
+  };
+
+  return publishOr503(c, sessionId, event.type, event);
+}
+
+export async function createClickEventHandler(c: Context): Promise<Response> {
+  const parsedRequest = await parseEventRequest(c, clickEventBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
+
+  const { sessionId, data } = parsedRequest;
+
+  const event: ClickEvent = {
+    type: EventType.CLICK,
+    sessionId,
+    timestamp: Date.now(),
+    element: data.element,
+    page: data.page,
+  };
+
+  return publishOr503(c, sessionId, event.type, event);
+}
+
+export async function createScrollEventHandler(c: Context): Promise<Response> {
+  const parsedRequest = await parseEventRequest(c, scrollEventBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
+
+  const { sessionId, data } = parsedRequest;
+
+  const event: ScrollEvent = {
+    type: EventType.SCROLL,
+    sessionId,
+    timestamp: Date.now(),
+    depth: data.depth,
+    page: data.page,
+  };
+
+  return publishOr503(c, sessionId, event.type, event);
+}
+
+export async function createFilterChangeEventHandler(c: Context): Promise<Response> {
+  const parsedRequest = await parseEventRequest(c, filterChangeEventBodySchema);
+  if (parsedRequest instanceof Response) return parsedRequest;
+
+  const { sessionId, data } = parsedRequest;
+
+  const event: FilterChangeEvent = {
+    type: EventType.FILTER_CHANGE,
+    sessionId,
+    timestamp: Date.now(),
+    filter: data.filter,
+    value: data.value,
   };
 
   return publishOr503(c, sessionId, event.type, event);

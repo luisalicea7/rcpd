@@ -200,6 +200,8 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
   let next: BehavioralProfile = { ...profile, engagement, lastUpdated: Date.now() };
 
   switch (event.type) {
+    case "page_view":
+      break;
     case "product_view":
       next = {
         ...next,
@@ -231,6 +233,40 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
       next = {
         ...next,
         cartLastUpdated: Date.now(),
+      };
+      break;
+    case "idle":
+      break;
+    case "click":
+      next = {
+        ...next,
+        engagement: {
+          ...next.engagement,
+          clickCount: next.engagement.clickCount + 1,
+        },
+      };
+      break;
+    case "scroll": {
+      const scrollCount = next.engagement.totalEvents;
+      const avgScrollDepth =
+        (next.engagement.avgScrollDepth * Math.max(0, scrollCount - 1) + event.depth) / scrollCount;
+
+      next = {
+        ...next,
+        engagement: {
+          ...next.engagement,
+          avgScrollDepth,
+        },
+      };
+      break;
+    }
+    case "filter_change":
+      next = {
+        ...next,
+        engagement: {
+          ...next.engagement,
+          filterUsageCount: next.engagement.filterUsageCount + 1,
+        },
       };
       break;
     default:

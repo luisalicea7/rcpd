@@ -16,12 +16,18 @@ function isAppEvent(value: unknown): value is AppEvent {
   if (typeof event.timestamp !== "number") return false;
 
   switch (event.type) {
+    case "page_view":
+      return (
+        typeof event.page === "string" &&
+        (event.referrer === undefined || typeof event.referrer === "string")
+      );
     case "product_view":
       return (
         typeof event.productId === "string" &&
         typeof event.productName === "string" &&
         typeof event.category === "string" &&
-        typeof event.price === "number"
+        typeof event.price === "number" &&
+        (event.viewDuration === undefined || typeof event.viewDuration === "number")
       );
     case "search":
       return typeof event.query === "string" && typeof event.resultsCount === "number";
@@ -35,6 +41,14 @@ function isAppEvent(value: unknown): value is AppEvent {
       );
     case "remove_from_cart":
       return typeof event.productId === "string" && typeof event.quantity === "number";
+    case "idle":
+      return typeof event.idleDuration === "number" && typeof event.page === "string";
+    case "click":
+      return typeof event.element === "string" && typeof event.page === "string";
+    case "scroll":
+      return typeof event.depth === "number" && typeof event.page === "string";
+    case "filter_change":
+      return typeof event.filter === "string" && typeof event.value === "string";
     default:
       return false;
   }

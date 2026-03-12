@@ -3,6 +3,10 @@ export type BackstageMessageType = "capture" | "learn" | "decide" | "explain";
 export interface CapturePayload {
   eventType: string;
   source: string;
+  page?: string;
+  element?: string;
+  filter?: string;
+  depth?: number;
   productId?: string;
   category?: string;
   price?: number;
