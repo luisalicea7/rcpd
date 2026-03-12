@@ -156,18 +156,16 @@ export async function updateCartItemQuantity(
   });
 }
 
-export async function removeCartItem(sessionId: string, itemId: string): Promise<boolean> {
+export async function removeCartItem(sessionId: string, itemId: string): Promise<Cart | null> {
   const current = await getCart(sessionId);
   const nextItems = current.items.filter((item) => item.id !== itemId);
 
   if (nextItems.length === current.items.length) {
-    return false;
+    return null;
   }
 
-  await saveCart(sessionId, {
+  return saveCart(sessionId, {
     ...current,
     items: nextItems,
   });
-
-  return true;
 }

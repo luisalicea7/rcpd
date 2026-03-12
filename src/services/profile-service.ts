@@ -8,6 +8,8 @@ import type {
   PriceStatistics,
 } from "../types/profile.js";
 
+const MIN_ACTIVE_IDLE_MS = 5000;
+
 function profileKey(sessionId: string): string {
   return `profile:${sessionId}`;
 }
@@ -19,6 +21,7 @@ function defaultProfile(sessionId: string): BehavioralProfile {
     priceStats: null,
     engagement: {
       totalEvents: 0,
+      totalScrollEvents: 0,
       avgScrollDepth: 0,
       clickCount: 0,
       filterUsageCount: 0,
@@ -51,13 +54,24 @@ function isValidBehavioralProfile(value: unknown): value is BehavioralProfile {
   const e = v.engagement as Record<string, unknown>;
   const engagementKeys = [
     "totalEvents",
+    "totalScrollEvents",
     "avgScrollDepth",
     "clickCount",
     "filterUsageCount",
     "searchCount",
     "repeatViewCount",
   ];
-  if (engagementKeys.some((k) => typeof e[k] !== "number")) return false;
+  if (
+    engagementKeys.some(
+      (k) => k !== "totalScrollEvents" && typeof e[k] !== "number",
+    )
+  ) {
+    return false;
+  }
+
+  if (e.totalScrollEvents !== undefined && typeof e.totalScrollEvents !== "number") {
+    return false;
+  }
 
   if (!v.abandonmentRisk || typeof v.abandonmentRisk !== "object") return false;
   const ar = v.abandonmentRisk as Record<string, unknown>;
@@ -179,6 +193,10 @@ export async function getProfile(sessionId: string): Promise<BehavioralProfile> 
       return defaultProfile(sessionId);
     }
 
+    if (typeof parsed.engagement.totalScrollEvents !== "number") {
+      parsed.engagement.totalScrollEvents = 0;
+    }
+
     return parsed;
   } catch {
     return defaultProfile(sessionId);
@@ -194,13 +212,20 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
 
   const engagement: EngagementMetrics = {
     ...profile.engagement,
-    totalEvents: profile.engagement.totalEvents + 1,
+    totalScrollEvents: profile.engagement.totalScrollEvents ?? 0,
   };
 
   let next: BehavioralProfile = { ...profile, engagement, lastUpdated: Date.now() };
 
   switch (event.type) {
     case "page_view":
+      next = {
+        ...next,
+        engagement: {
+          ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
+        },
+      };
       break;
     case "product_view":
       next = {
@@ -209,6 +234,7 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
         priceStats: updatePriceStats(next.priceStats, event.price),
         engagement: {
           ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
           repeatViewCount: next.engagement.repeatViewCount + 1,
         },
       };
@@ -218,6 +244,7 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
         ...next,
         engagement: {
           ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
           searchCount: next.engagement.searchCount + 1,
         },
       };
@@ -227,34 +254,54 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
         ...next,
         cartLastUpdated: Date.now(),
         priceStats: updatePriceStats(next.priceStats, event.price),
+        engagement: {
+          ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
+        },
       };
       break;
     case "remove_from_cart":
       next = {
         ...next,
         cartLastUpdated: Date.now(),
+        engagement: {
+          ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
+        },
       };
       break;
     case "idle":
+      if (event.idleDuration < MIN_ACTIVE_IDLE_MS) {
+        next = {
+          ...next,
+          engagement: {
+            ...next.engagement,
+            totalEvents: next.engagement.totalEvents + 1,
+          },
+        };
+      }
       break;
     case "click":
       next = {
         ...next,
         engagement: {
           ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
           clickCount: next.engagement.clickCount + 1,
         },
       };
       break;
     case "scroll": {
-      const scrollCount = next.engagement.totalEvents;
+      const scrollEvents = next.engagement.totalScrollEvents + 1;
       const avgScrollDepth =
-        (next.engagement.avgScrollDepth * Math.max(0, scrollCount - 1) + event.depth) / scrollCount;
+        (next.engagement.avgScrollDepth * Math.max(0, scrollEvents - 1) + event.depth) / scrollEvents;
 
       next = {
         ...next,
         engagement: {
           ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
+          totalScrollEvents: scrollEvents,
           avgScrollDepth,
         },
       };
@@ -265,6 +312,7 @@ export async function updateProfileFromEvent(event: AppEvent): Promise<Behaviora
         ...next,
         engagement: {
           ...next.engagement,
+          totalEvents: next.engagement.totalEvents + 1,
           filterUsageCount: next.engagement.filterUsageCount + 1,
         },
       };

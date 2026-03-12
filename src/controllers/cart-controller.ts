@@ -108,12 +108,11 @@ export async function removeCartItemHandler(c: Context): Promise<Response> {
 
   try {
     const itemId = c.req.param("id");
-    const removed = await removeCartItem(sessionId, itemId);
-    if (!removed) {
+    const cart = await removeCartItem(sessionId, itemId);
+    if (!cart) {
       return c.json({ error: "Cart item not found", code: "CART_ITEM_NOT_FOUND" }, 404);
     }
 
-    const cart = await getCart(sessionId);
     return c.json(cart);
   } catch (err) {
     return respondRedisUnavailable(c, sessionId, err);
