@@ -1,5 +1,4 @@
 import type { Context } from "hono";
-import { logger } from "../utils/logger.js";
 import {
   addCartItemBodySchema,
   updateCartItemBodySchema,
@@ -11,6 +10,7 @@ import {
   updateCartItemQuantity,
 } from "../services/cart-service.js";
 import { requireSessionId } from "../utils/session-context.js";
+import { respondRedisUnavailable } from "../utils/redis-availability.js";
 
 function redactSessionId(sessionId: string): string {
   if (sessionId.length <= 10) {
@@ -20,17 +20,15 @@ function redactSessionId(sessionId: string): string {
   return `${sessionId.slice(0, 6)}...${sessionId.slice(-4)}`;
 }
 
-function respondRedisUnavailable(c: Context, sessionId: string, err: unknown): Response {
-  logger.error(
-    { err, path: c.req.path, sessionId: redactSessionId(sessionId) },
-    "Redis unavailable during cart request",
-  );
-
-  return c.json({ error: "Service unavailable", code: "REDIS_UNAVAILABLE" }, 503);
-}
-
 function invalidPayload(c: Context): Response {
   return c.json({ error: "Invalid cart payload", code: "INVALID_CART_PAYLOAD" }, 400);
+}
+
+function respondCartRedisUnavailable(c: Context, sessionId: string, err: unknown): Response {
+  return respondRedisUnavailable(c, err, "Redis unavailable during cart request", {
+    path: c.req.path,
+    sessionId: redactSessionId(sessionId),
+  });
 }
 
 export async function getCartHandler(c: Context): Promise<Response> {
@@ -41,7 +39,7 @@ export async function getCartHandler(c: Context): Promise<Response> {
     const cart = await getCart(sessionId);
     return c.json(cart);
   } catch (err) {
-    return respondRedisUnavailable(c, sessionId, err);
+    return respondCartRedisUnavailable(c, sessionId, err);
   }
 }
 
@@ -69,7 +67,7 @@ export async function addCartItemHandler(c: Context): Promise<Response> {
 
     return c.json(cart, 201);
   } catch (err) {
-    return respondRedisUnavailable(c, sessionId, err);
+    return respondCartRedisUnavailable(c, sessionId, err);
   }
 }
 
@@ -98,7 +96,7 @@ export async function updateCartItemHandler(c: Context): Promise<Response> {
 
     return c.json(cart);
   } catch (err) {
-    return respondRedisUnavailable(c, sessionId, err);
+    return respondCartRedisUnavailable(c, sessionId, err);
   }
 }
 
@@ -115,6 +113,6 @@ export async function removeCartItemHandler(c: Context): Promise<Response> {
 
     return c.json(cart);
   } catch (err) {
-    return respondRedisUnavailable(c, sessionId, err);
+    return respondCartRedisUnavailable(c, sessionId, err);
   }
 }

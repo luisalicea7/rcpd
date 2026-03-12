@@ -52,20 +52,16 @@ function isValidBehavioralProfile(value: unknown): value is BehavioralProfile {
 
   if (!v.engagement || typeof v.engagement !== "object") return false;
   const e = v.engagement as Record<string, unknown>;
-  const engagementKeys = [
+  const requiredKeys = [
     "totalEvents",
-    "totalScrollEvents",
     "avgScrollDepth",
     "clickCount",
     "filterUsageCount",
     "searchCount",
     "repeatViewCount",
-  ];
-  if (
-    engagementKeys.some(
-      (k) => k !== "totalScrollEvents" && typeof e[k] !== "number",
-    )
-  ) {
+  ] as const;
+
+  if (!requiredKeys.every((k) => typeof e[k] === "number")) {
     return false;
   }
 

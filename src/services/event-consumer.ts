@@ -1,5 +1,5 @@
 import { config } from "../config/index.js";
-import { createConsumerClient, redis, type RedisClient } from "../config/redis.js";
+import { createConsumerClient, type RedisClient } from "../config/redis.js";
 import type { AppEvent } from "../types/events.js";
 import { logger } from "../utils/logger.js";
 import { updateProfileFromEvent } from "./profile-service.js";
@@ -8,8 +8,8 @@ import { backstageManager } from "./backstage-manager.js";
 const EVENTS_STREAM_KEY = "rpd:events";
 const DEDUPE_KEY_PREFIX = "consumer:profile:processed";
 
-function dedupeKey(sessionId: string): string {
-  return `${DEDUPE_KEY_PREFIX}:${sessionId}`;
+function dedupeKey(sessionId: string, entryId: string): string {
+  return `${DEDUPE_KEY_PREFIX}:${sessionId}:${entryId}`;
 }
 
 function isAppEvent(value: unknown): value is AppEvent {
@@ -83,20 +83,15 @@ async function ensureConsumerGroup(client: RedisClient): Promise<void> {
   }
 }
 
-async function isDuplicateEvent(event: AppEvent, eventId: string): Promise<boolean> {
-  const key = dedupeKey(event.sessionId);
-  const setResult = await redis.set(key, eventId, "NX", "EX", 60 * 60 * 24);
+async function isDuplicateEvent(client: RedisClient, event: AppEvent, eventId: string): Promise<boolean> {
+  const key = dedupeKey(event.sessionId, eventId);
+  const marker = await client.get(key);
+  return marker === "1";
+}
 
-  if (setResult === "OK") {
-    return false;
-  }
-
-  const currentMarker = await redis.get(key);
-  if (currentMarker === eventId) {
-    return true;
-  }
-
-  return true;
+async function markEventProcessed(client: RedisClient, event: AppEvent, eventId: string): Promise<void> {
+  const key = dedupeKey(event.sessionId, eventId);
+  await client.set(key, "1", "NX", "EX", 60 * 60 * 24);
 }
 
 async function processEntry(client: RedisClient, id: string, fields: string[]): Promise<boolean> {
@@ -107,7 +102,7 @@ async function processEntry(client: RedisClient, id: string, fields: string[]): 
     return false;
   }
 
-  if (await isDuplicateEvent(event, id)) {
+  if (await isDuplicateEvent(client, event, id)) {
     await client.xack(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, id);
     return false;
   }
@@ -129,16 +124,8 @@ async function processEntry(client: RedisClient, id: string, fields: string[]): 
     },
   });
 
+  await markEventProcessed(client, event, id);
   await client.xack(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, id);
-
-  try {
-    await client.xtrimMaxLen(EVENTS_STREAM_KEY, config.EVENTS_STREAM_MAXLEN, true);
-  } catch (err) {
-    logger.warn(
-      { err, streamKey: EVENTS_STREAM_KEY, maxLen: config.EVENTS_STREAM_MAXLEN },
-      "Failed to trim events stream post-ack",
-    );
-  }
 
   return true;
 }
@@ -156,6 +143,15 @@ async function processReadResults(client: RedisClient, results: Record<string, A
         logger.error({ err, id }, "Failed processing stream entry; leaving pending for retry");
       }
     }
+  }
+
+  try {
+    await client.xtrimMaxLen(EVENTS_STREAM_KEY, config.EVENTS_STREAM_MAXLEN, true);
+  } catch (err) {
+    logger.warn(
+      { err, streamKey: EVENTS_STREAM_KEY, maxLen: config.EVENTS_STREAM_MAXLEN },
+      "Failed to trim events stream post-batch",
+    );
   }
 
   return processed;
@@ -208,7 +204,7 @@ export async function consumeProfileEventsOnce(batchSize = config.PROFILE_CONSUM
       ">",
     );
 
-    return processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+    return await processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
   } finally {
     client.close();
   }
