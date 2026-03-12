@@ -6,6 +6,7 @@ import {
   type PersonalizationAction,
 } from "../types/personalization.js";
 import { listProductsByCategory } from "./product-service.js";
+import { backstageManager } from "./backstage-manager.js";
 
 const ACTIONS_KEY_PREFIX = "actions";
 const ACTIONS_TTL_SECONDS = 60 * 60 * 24;
@@ -111,7 +112,10 @@ function applyConflictRules(actions: PersonalizationAction[]): PersonalizationAc
   return actions.filter((a) => a.type !== loserType);
 }
 
-export async function getPersonalization(sessionId: string): Promise<{
+export async function getPersonalization(
+  sessionId: string,
+  traceId?: string,
+): Promise<{
   sessionId: string;
   generatedAt: number;
   actions: PersonalizationAction[];
@@ -216,6 +220,37 @@ export async function getPersonalization(sessionId: string): Promise<{
   const ranked = applyConflictRules(
     dedupeByType(actions.sort((a, b) => b.reasoning.confidence - a.reasoning.confidence)),
   ).slice(0, MAX_ACTIONS);
+
+  const correlationTraceId = traceId;
+  for (const action of ranked) {
+    backstageManager.emit("decide", {
+      sessionId,
+      eventId: action.id,
+      traceId: correlationTraceId,
+      payload: {
+        ruleId: action.reasoning.rule,
+        matched: true,
+        confidence: Number((action.reasoning.confidence / 100).toFixed(2)),
+        actionType: action.type,
+      },
+    });
+
+    backstageManager.emit("explain", {
+      sessionId,
+      eventId: action.id,
+      traceId: correlationTraceId,
+      payload: {
+        title: `${action.type} triggered`,
+        reason: action.reasoning.triggerCondition,
+        humanText: action.reasoning.explanation,
+        action: {
+          id: action.id,
+          type: action.type,
+          params: action.payload,
+        },
+      },
+    });
+  }
 
   const key = actionsKey(sessionId);
   try {

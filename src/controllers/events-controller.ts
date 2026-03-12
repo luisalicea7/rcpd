@@ -7,6 +7,7 @@ import {
   searchEventBodySchema,
 } from "../schemas/events.js";
 import { publishEvent } from "../services/event-producer.js";
+import { backstageManager } from "../services/backstage-manager.js";
 import { getProductById } from "../services/product-service.js";
 import {
   EventType,
@@ -75,6 +76,20 @@ async function publishOr503(
 ): Promise<Response> {
   try {
     const streamId = await publishEvent(event);
+
+    backstageManager.emit("capture", {
+      sessionId,
+      eventId: streamId,
+      traceId: streamId,
+      payload: {
+        eventType,
+        source: c.req.path,
+        productId: "productId" in event ? event.productId : undefined,
+        category: "category" in event ? event.category : undefined,
+        price: "price" in event ? event.price : undefined,
+      },
+    });
+
     return c.json({ ok: true, streamId, eventType }, 201);
   } catch (err) {
     logger.error(
