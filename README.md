@@ -35,21 +35,83 @@ bun run dev
 
 Server runs on `http://localhost:3000` by default.
 
-## Implemented in this phase
+## API endpoints (current)
 
-- App bootstrap (`src/app.ts`, `src/index.ts`)
-- Health endpoint: `GET /health`
-- Session cookie middleware (`rpd_session`)
-- Consent endpoints:
+- Health:
+  - `GET /health`
+- Consent:
   - `GET /api/consent/status`
   - `POST /api/consent/grant`
   - `POST /api/consent/revoke`
-- Sliding TTL refresh for session keys
-- Session-owned key index for deterministic revoke cleanup (`session:{id}:keys`)
-- Product catalog API with **120 curated products**:
+- Products:
   - `GET /api/products`
   - `GET /api/products/:id`
-  - filtering (`category`, `priceRange`, `minPrice`, `maxPrice`, `q`) + pagination (`limit`, `offset`)
+- Events:
+  - `POST /api/events/page-view`
+  - `POST /api/events/product-view`
+  - `POST /api/events/search`
+  - `POST /api/events/add-to-cart`
+  - `POST /api/events/remove-from-cart`
+  - `POST /api/events/idle`
+  - `POST /api/events/click`
+  - `POST /api/events/scroll`
+  - `POST /api/events/filter-change`
+- Cart:
+  - `GET /api/cart`
+  - `POST /api/cart/items`
+  - `PATCH /api/cart/items/:id`
+  - `DELETE /api/cart/items/:id`
+- Profile:
+  - `GET /api/profile/me` (legacy)
+  - `GET /api/profile` (compat shape)
+- Personalization:
+  - `GET /api/personalization/me` (legacy)
+  - `GET /api/personalization/actions` (compat)
+  - `GET /api/personalization/history` (compat)
+
+## Personalization/profile compatibility notes
+
+Legacy `/me` endpoints are preserved. Spec-compatible endpoints are added:
+
+- `GET /api/profile` returns:
+  - `sessionId`
+  - `profile` (same object returned by `/api/profile/me`)
+- `GET /api/personalization/actions` returns:
+  - `sessionId`
+  - `generatedAt`
+  - `actions`
+- `GET /api/personalization/history` returns:
+  - `sessionId`
+  - `count`
+  - `history` (most recent generated actions)
+
+## Event consumer reliability
+
+Profile consumer now uses Redis consumer groups for at-least-once reliability:
+
+- `XGROUP CREATE` bootstraps consumer group (idempotent)
+- `XREADGROUP` for normal consumption
+- `XACK` only after successful profile update
+- `XAUTOCLAIM` to reclaim stale pending entries
+- Per-session dedupe marker (`consumer:profile:processed:{sessionId}`) to reduce accidental double-processing
+- Stream trimming on publish via `XTRIM MAXLEN ~` using `EVENTS_STREAM_MAXLEN`
+
+## Running the worker (recommended deployment pattern)
+
+The API process does **not** auto-run the profile consumer worker.
+Run worker separately (separate process/container):
+
+```bash
+# one-shot batch (useful for ad-hoc runs)
+bun run consume:profile:once
+
+# long-running consumer (production)
+bun run consume:profile:loop
+```
+
+In production, deploy at least:
+- 1 API service (`bun run start`)
+- 1 worker service (`bun run consume:profile:loop`)
 
 ## Manual test flow
 

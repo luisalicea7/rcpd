@@ -1,11 +1,16 @@
-import { redis } from "../config/redis.js";
+import { config } from "../config/index.js";
+import { createConsumerClient, type RedisClient } from "../config/redis.js";
 import type { AppEvent } from "../types/events.js";
 import { logger } from "../utils/logger.js";
 import { updateProfileFromEvent } from "./profile-service.js";
 import { backstageManager } from "./backstage-manager.js";
 
 const EVENTS_STREAM_KEY = "rpd:events";
-const CONSUMER_CURSOR_KEY = "consumer:profile:lastId";
+const DEDUPE_KEY_PREFIX = "consumer:profile:processed";
+
+function dedupeKey(sessionId: string, entryId: string): string {
+  return `${DEDUPE_KEY_PREFIX}:${sessionId}:${entryId}`;
+}
 
 function isAppEvent(value: unknown): value is AppEvent {
   if (!value || typeof value !== "object") return false;
@@ -16,12 +21,18 @@ function isAppEvent(value: unknown): value is AppEvent {
   if (typeof event.timestamp !== "number") return false;
 
   switch (event.type) {
+    case "page_view":
+      return (
+        typeof event.page === "string" &&
+        (event.referrer === undefined || typeof event.referrer === "string")
+      );
     case "product_view":
       return (
         typeof event.productId === "string" &&
         typeof event.productName === "string" &&
         typeof event.category === "string" &&
-        typeof event.price === "number"
+        typeof event.price === "number" &&
+        (event.viewDuration === undefined || typeof event.viewDuration === "number")
       );
     case "search":
       return typeof event.query === "string" && typeof event.resultsCount === "number";
@@ -35,6 +46,14 @@ function isAppEvent(value: unknown): value is AppEvent {
       );
     case "remove_from_cart":
       return typeof event.productId === "string" && typeof event.quantity === "number";
+    case "idle":
+      return typeof event.idleDuration === "number" && typeof event.page === "string";
+    case "click":
+      return typeof event.element === "string" && typeof event.page === "string";
+    case "scroll":
+      return typeof event.depth === "number" && typeof event.page === "string";
+    case "filter_change":
+      return typeof event.filter === "string" && typeof event.value === "string";
     default:
       return false;
   }
@@ -53,62 +72,189 @@ function parseEventFromFields(fields: string[]): AppEvent | null {
   }
 }
 
-export async function consumeProfileEventsOnce(batchSize = 50): Promise<number> {
-  const lastId = (await redis.get(CONSUMER_CURSOR_KEY)) ?? "0-0";
+async function ensureConsumerGroup(client: RedisClient): Promise<void> {
+  try {
+    await client.xgroupCreate(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, "0", true);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!message.includes("BUSYGROUP")) {
+      throw err;
+    }
+  }
+}
 
-  const results = await redis.xread(
-    "COUNT",
-    batchSize,
-    "STREAMS",
-    EVENTS_STREAM_KEY,
-    lastId,
-  );
+async function isDuplicateEvent(client: RedisClient, event: AppEvent, eventId: string): Promise<boolean> {
+  const key = dedupeKey(event.sessionId, eventId);
+  const marker = await client.get(key);
+  return marker === "1";
+}
 
+async function markEventProcessed(client: RedisClient, event: AppEvent, eventId: string): Promise<void> {
+  const key = dedupeKey(event.sessionId, eventId);
+  await client.set(key, "1", "NX", "EX", 60 * 60 * 24);
+}
+
+async function processEntry(client: RedisClient, id: string, fields: string[]): Promise<boolean> {
+  const event = parseEventFromFields(fields);
+  if (!event) {
+    logger.warn({ id }, "Skipping malformed stream payload");
+    await client.xack(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, id);
+    return false;
+  }
+
+  if (await isDuplicateEvent(client, event, id)) {
+    await client.xack(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, id);
+    return false;
+  }
+
+  const updatedProfile = await updateProfileFromEvent(event);
+  const topInterest = updatedProfile.interests.slice().sort((a, b) => b.score - a.score)[0];
+
+  backstageManager.emit("learn", {
+    sessionId: event.sessionId,
+    eventId: id,
+    traceId: id,
+    payload: {
+      profileDelta: {
+        topCategory: topInterest?.category,
+        newInterestScore: topInterest?.score,
+        avgViewedPrice: updatedProfile.priceStats?.avg,
+        abandonmentRisk: updatedProfile.abandonmentRisk.score,
+      },
+    },
+  });
+
+  await markEventProcessed(client, event, id);
+  await client.xack(EVENTS_STREAM_KEY, config.PROFILE_CONSUMER_GROUP, id);
+
+  return true;
+}
+
+async function processReadResults(client: RedisClient, results: Record<string, Array<[string, string[]]>> | null): Promise<number> {
   if (!results || Object.keys(results).length === 0) return 0;
 
   let processed = 0;
-
   for (const entries of Object.values(results)) {
     for (const [id, fields] of entries) {
-      const event = parseEventFromFields(fields as string[]);
-      if (!event) {
-        continue;
+      try {
+        const handled = await processEntry(client, id, fields as string[]);
+        if (handled) processed += 1;
+      } catch (err) {
+        logger.error({ err, id }, "Failed processing stream entry; leaving pending for retry");
       }
-
-      const updatedProfile = await updateProfileFromEvent(event);
-
-      const topInterest = updatedProfile.interests.slice().sort((a, b) => b.score - a.score)[0];
-
-      backstageManager.emit("learn", {
-        sessionId: event.sessionId,
-        eventId: id,
-        traceId: id,
-        payload: {
-          profileDelta: {
-            topCategory: topInterest?.category,
-            newInterestScore: topInterest?.score,
-            avgViewedPrice: updatedProfile.priceStats?.avg,
-            abandonmentRisk: updatedProfile.abandonmentRisk.score,
-          },
-        },
-      });
-
-      processed += 1;
-      await redis.set(CONSUMER_CURSOR_KEY, id);
     }
+  }
+
+  try {
+    await client.xtrimMaxLen(EVENTS_STREAM_KEY, config.EVENTS_STREAM_MAXLEN, true);
+  } catch (err) {
+    logger.warn(
+      { err, streamKey: EVENTS_STREAM_KEY, maxLen: config.EVENTS_STREAM_MAXLEN },
+      "Failed to trim events stream post-batch",
+    );
   }
 
   return processed;
 }
 
-export async function consumeProfileEventsLoop(intervalMs = 2000): Promise<void> {
-  while (true) {
-    try {
-      await consumeProfileEventsOnce();
-    } catch (err) {
-      logger.error({ err, intervalMs }, "Profile consumer iteration failed");
-    }
+async function reclaimStalePending(client: RedisClient): Promise<number> {
+  try {
+    const [nextStartId, entries] = await client.xautoclaim(
+      EVENTS_STREAM_KEY,
+      config.PROFILE_CONSUMER_GROUP,
+      config.PROFILE_CONSUMER_NAME,
+      config.PROFILE_CONSUMER_RECLAIM_IDLE_MS,
+      "0-0",
+      config.PROFILE_CONSUMER_RECLAIM_BATCH_SIZE,
+    );
 
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    if (entries.length === 0) return 0;
+
+    const wrapped: Record<string, Array<[string, string[]]>> = {
+      [EVENTS_STREAM_KEY]: entries as Array<[string, string[]]>,
+    };
+
+    const reclaimedProcessed = await processReadResults(client, wrapped);
+    logger.info(
+      { reclaimedProcessed, nextStartId, idleMs: config.PROFILE_CONSUMER_RECLAIM_IDLE_MS },
+      "Reclaimed stale pending events",
+    );
+
+    return reclaimedProcessed;
+  } catch (err) {
+    logger.error({ err }, "Failed to reclaim stale pending events");
+    return 0;
+  }
+}
+
+export async function consumeProfileEventsOnce(batchSize = config.PROFILE_CONSUMER_BATCH_SIZE): Promise<number> {
+  const client = await createConsumerClient();
+
+  try {
+    await ensureConsumerGroup(client);
+
+    await reclaimStalePending(client);
+
+    const results = await client.xreadgroup(
+      config.PROFILE_CONSUMER_GROUP,
+      config.PROFILE_CONSUMER_NAME,
+      batchSize,
+      1,
+      EVENTS_STREAM_KEY,
+      ">",
+    );
+
+    return await processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+  } finally {
+    client.close();
+  }
+}
+
+export async function consumeProfileEventsLoop(intervalMs = 2000): Promise<void> {
+  const client = await createConsumerClient();
+  let shuttingDown = false;
+
+  const shutdownHandler = (signal: NodeJS.Signals): void => {
+    shuttingDown = true;
+    logger.info({ signal }, "Profile consumer shutdown requested");
+  };
+
+  process.on("SIGINT", shutdownHandler);
+  process.on("SIGTERM", shutdownHandler);
+
+  try {
+    await ensureConsumerGroup(client);
+
+    while (!shuttingDown) {
+      try {
+        await reclaimStalePending(client);
+
+        const results = await client.xreadgroup(
+          config.PROFILE_CONSUMER_GROUP,
+          config.PROFILE_CONSUMER_NAME,
+          config.PROFILE_CONSUMER_BATCH_SIZE,
+          config.PROFILE_CONSUMER_BLOCK_MS,
+          EVENTS_STREAM_KEY,
+          ">",
+        );
+
+        await processReadResults(client, results as Record<string, Array<[string, string[]]>> | null);
+      } catch (err) {
+        logger.error({ err, intervalMs }, "Profile consumer iteration failed");
+
+        if (!shuttingDown) {
+          await new Promise((resolve) => setTimeout(resolve, intervalMs));
+        }
+      }
+    }
+  } finally {
+    process.off("SIGINT", shutdownHandler);
+    process.off("SIGTERM", shutdownHandler);
+
+    try {
+      client.close();
+    } catch (err) {
+      logger.error({ err }, "Error while closing profile consumer Redis client");
+    }
   }
 }

@@ -5,6 +5,9 @@ type RedisPrimitive = string | number;
 
 type XReadEntry = [id: string, fields: string[]];
 type XReadResult = Record<string, XReadEntry[]>;
+type XReadGroupResult = Record<string, XReadEntry[]>;
+type XAutoClaimEntry = [id: string, fields: string[]];
+type XAutoClaimResult = [nextStartId: string, entries: XAutoClaimEntry[], deletedIds?: string[]];
 
 type RedisEvent = "connect" | "error";
 
@@ -60,14 +63,31 @@ class RedisAdapter {
     return this.client.mget(...keys);
   }
 
-  set(key: string, value: string): Promise<string>;
-  set(key: string, value: string, mode: "EX", seconds: number): Promise<string>;
-  set(key: string, value: string, mode?: "EX", seconds?: number): Promise<string> {
-    if (mode === "EX" && typeof seconds === "number") {
-      return this.client.send("SET", [key, value, mode, String(seconds)]) as Promise<string>;
+  set(key: string, value: string): Promise<string | null>;
+  set(key: string, value: string, mode: "EX", seconds: number): Promise<string | null>;
+  set(
+    key: string,
+    value: string,
+    mode1: "NX" | "XX",
+    mode2: "EX",
+    seconds: number,
+  ): Promise<string | null>;
+  set(
+    key: string,
+    value: string,
+    mode?: "EX" | "NX" | "XX",
+    arg2?: number | "EX",
+    arg3?: number,
+  ): Promise<string | null> {
+    if (mode === "EX" && typeof arg2 === "number") {
+      return this.client.send("SET", [key, value, mode, String(arg2)]) as Promise<string | null>;
     }
 
-    return this.client.set(key, value);
+    if ((mode === "NX" || mode === "XX") && arg2 === "EX" && typeof arg3 === "number") {
+      return this.client.send("SET", [key, value, mode, arg2, String(arg3)]) as Promise<string | null>;
+    }
+
+    return this.client.set(key, value) as Promise<string | null>;
   }
 
   expire(key: string, seconds: number): Promise<number> {
@@ -92,20 +112,96 @@ class RedisAdapter {
     return this.client.unlink(...keys);
   }
 
-  xadd(
-    key: string,
-    id: string,
-    ...fieldValues: RedisPrimitive[]
-  ): Promise<string | null> {
-    return this.client.send("XADD", [
-      key,
-      id,
-      ...fieldValues.map((v) => String(v)),
-    ]) as Promise<string | null>;
+  xadd(key: string, id: string, ...fieldValues: RedisPrimitive[]): Promise<string | null> {
+    return this.client.send("XADD", [key, id, ...fieldValues.map((v) => String(v))]) as Promise<
+      string | null
+    >;
   }
 
   xread(...args: RedisPrimitive[]): Promise<XReadResult | null> {
     return this.client.send("XREAD", args.map((v) => String(v))) as Promise<XReadResult | null>;
+  }
+
+  xgroupCreate(streamKey: string, groupName: string, id = "0", mkstream = true): Promise<string> {
+    const args = ["CREATE", streamKey, groupName, id, ...(mkstream ? ["MKSTREAM"] : [])];
+    return this.client.send("XGROUP", args) as Promise<string>;
+  }
+
+  xreadgroup(
+    groupName: string,
+    consumerName: string,
+    count: number,
+    blockMs: number,
+    streamKey: string,
+    streamId: string,
+  ): Promise<XReadGroupResult | null> {
+    return this.client.send("XREADGROUP", [
+      "GROUP",
+      groupName,
+      consumerName,
+      "COUNT",
+      String(count),
+      "BLOCK",
+      String(blockMs),
+      "STREAMS",
+      streamKey,
+      streamId,
+    ]) as Promise<XReadGroupResult | null>;
+  }
+
+  xack(streamKey: string, groupName: string, ...ids: string[]): Promise<number> {
+    if (ids.length === 0) return Promise.resolve(0);
+    return this.client.send("XACK", [streamKey, groupName, ...ids]) as Promise<number>;
+  }
+
+  xautoclaim(
+    streamKey: string,
+    groupName: string,
+    consumerName: string,
+    minIdleMs: number,
+    startId = "0-0",
+    count = 20,
+  ): Promise<XAutoClaimResult> {
+    return this.client.send("XAUTOCLAIM", [
+      streamKey,
+      groupName,
+      consumerName,
+      String(minIdleMs),
+      startId,
+      "COUNT",
+      String(count),
+    ]) as Promise<XAutoClaimResult>;
+  }
+
+  xtrimMaxLen(streamKey: string, maxLen: number, approximate = true): Promise<number> {
+    const args = [streamKey, "MAXLEN", ...(approximate ? ["~"] : []), String(maxLen)];
+    return this.client.send("XTRIM", args) as Promise<number>;
+  }
+
+  eval(script: string, keys: string[], args: string[]): Promise<unknown> {
+    return this.client.send("EVAL", [script, String(keys.length), ...keys, ...args]);
+  }
+
+  close(): void {
+    const client = this.client as unknown as {
+      close?: () => void;
+      disconnect?: () => void;
+      quit?: () => void | Promise<unknown>;
+    };
+
+    if (typeof client.close === "function") {
+      client.close();
+      return;
+    }
+
+    if (typeof client.disconnect === "function") {
+      client.disconnect();
+      return;
+    }
+
+    if (typeof client.quit === "function") {
+      void client.quit();
+    }
   }
 
   scan(
@@ -134,8 +230,6 @@ redis.on("error", (err) => console.error("[redis] error", err));
 
 void redis.connect();
 
-// Dedicated client for the blocking XREADGROUP call in the event consumer.
-// Keeps the main client free for regular operations during blocking reads.
 export async function createConsumerClient(): Promise<RedisClient> {
   const client = new RedisAdapter(config.REDIS_URL);
   await client.connect();

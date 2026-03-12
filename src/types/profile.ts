@@ -16,6 +16,7 @@ export interface PriceStatistics {
 
 export interface EngagementMetrics {
   totalEvents: number;
+  totalScrollEvents: number;
   avgScrollDepth: number; // 0–100
   clickCount: number;
   filterUsageCount: number;

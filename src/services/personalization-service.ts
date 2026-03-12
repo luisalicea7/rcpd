@@ -1,21 +1,17 @@
 import { redis } from "../config/redis.js";
 import { getProfile } from "./profile-service.js";
 import { logger } from "../utils/logger.js";
-import {
-  ActionType,
-  type PersonalizationAction,
-} from "../types/personalization.js";
+import { ActionType, type PersonalizationAction } from "../types/personalization.js";
 import { listProductsByCategory } from "./product-service.js";
 import { backstageManager } from "./backstage-manager.js";
 
 const ACTIONS_KEY_PREFIX = "actions";
+const ACTIONS_HISTORY_KEY_PREFIX = "actions:history";
 const ACTIONS_TTL_SECONDS = 60 * 60 * 24;
 const MAX_ACTIONS = 3;
+const MAX_ACTION_HISTORY = 50;
 
-const ACTION_COOLDOWNS_MS: Record<
-  Exclude<ActionType, ActionType.URGENCY_ALERT>,
-  number
-> = {
+const ACTION_COOLDOWNS_MS: Record<Exclude<ActionType, ActionType.URGENCY_ALERT>, number> = {
   [ActionType.CART_REMINDER]: 30 * 60 * 1000,
   [ActionType.DISCOUNT_BANNER]: 60 * 60 * 1000,
   [ActionType.CATEGORY_HIGHLIGHT]: 15 * 60 * 1000,
@@ -24,6 +20,10 @@ const ACTION_COOLDOWNS_MS: Record<
 
 function actionsKey(sessionId: string): string {
   return `${ACTIONS_KEY_PREFIX}:${sessionId}`;
+}
+
+function actionsHistoryKey(sessionId: string): string {
+  return `${ACTIONS_HISTORY_KEY_PREFIX}:${sessionId}`;
 }
 
 function now(): number {
@@ -53,21 +53,86 @@ function isPersonalizationAction(value: unknown): value is PersonalizationAction
   );
 }
 
-async function getRecentActions(sessionId: string): Promise<PersonalizationAction[]> {
+function parseActionList(raw: string | null): PersonalizationAction[] {
+  if (!raw) return [];
+
   try {
-    const raw = await redis.get(actionsKey(sessionId));
-    if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-
-    if (!parsed.every((item) => isPersonalizationAction(item))) {
-      return [];
-    }
-
+    if (!parsed.every((item) => isPersonalizationAction(item))) return [];
     return parsed;
   } catch {
     return [];
   }
+}
+
+async function getRecentActions(sessionId: string): Promise<PersonalizationAction[]> {
+  return parseActionList(await redis.get(actionsHistoryKey(sessionId)));
+}
+
+export async function getPersonalizationHistory(sessionId: string): Promise<PersonalizationAction[]> {
+  return parseActionList(await redis.get(actionsHistoryKey(sessionId)));
+}
+
+async function saveActionCaches(sessionId: string, actions: PersonalizationAction[]): Promise<void> {
+  const latestKey = actionsKey(sessionId);
+  const historyKey = actionsHistoryKey(sessionId);
+
+  const mergeAndCacheScript = `
+local latestKey = KEYS[1]
+local historyKey = KEYS[2]
+local actionsJson = ARGV[1]
+local ttlSeconds = tonumber(ARGV[2])
+local maxHistory = tonumber(ARGV[3])
+
+local existingRaw = redis.call("GET", historyKey)
+local existing = {}
+if existingRaw then
+  local ok, parsed = pcall(cjson.decode, existingRaw)
+  if ok and type(parsed) == "table" then
+    existing = parsed
+  end
+end
+
+local incoming = {}
+do
+  local ok, parsed = pcall(cjson.decode, actionsJson)
+  if ok and type(parsed) == "table" then
+    incoming = parsed
+  end
+end
+
+local merged = {}
+for i = 1, #incoming do
+  merged[#merged + 1] = incoming[i]
+end
+for i = 1, #existing do
+  merged[#merged + 1] = existing[i]
+end
+
+table.sort(merged, function(a, b)
+  local aCreated = (type(a) == "table" and tonumber(a.createdAt)) or 0
+  local bCreated = (type(b) == "table" and tonumber(b.createdAt)) or 0
+  return aCreated > bCreated
+end)
+
+if #merged > maxHistory then
+  for i = #merged, maxHistory + 1, -1 do
+    merged[i] = nil
+  end
+end
+
+redis.call("SET", latestKey, actionsJson, "EX", ttlSeconds)
+redis.call("SET", historyKey, cjson.encode(merged), "EX", ttlSeconds)
+
+return #merged
+`;
+
+  await redis.eval(mergeAndCacheScript, [latestKey, historyKey], [
+    JSON.stringify(actions),
+    String(ACTIONS_TTL_SECONDS),
+    String(MAX_ACTION_HISTORY),
+  ]);
 }
 
 function isInCooldown(
@@ -75,9 +140,7 @@ function isInCooldown(
   recent: PersonalizationAction[],
   nowTs: number,
 ): boolean {
-  const last = recent
-    .filter((a) => a.type === actionType)
-    .sort((a, b) => b.createdAt - a.createdAt)[0];
+  const last = recent.filter((a) => a.type === actionType).sort((a, b) => b.createdAt - a.createdAt)[0];
 
   if (!last) return false;
   return nowTs - last.createdAt < ACTION_COOLDOWNS_MS[actionType];
@@ -145,9 +208,7 @@ export async function getPersonalization(
     });
   }
 
-  const topInterest = profile.interests
-    .slice()
-    .sort((a, b) => b.score - a.score)[0];
+  const topInterest = profile.interests.slice().sort((a, b) => b.score - a.score)[0];
 
   if (
     topInterest &&
@@ -252,14 +313,10 @@ export async function getPersonalization(
     });
   }
 
-  const key = actionsKey(sessionId);
   try {
-    await redis.set(key, JSON.stringify(ranked), "EX", ACTIONS_TTL_SECONDS);
+    await saveActionCaches(sessionId, ranked);
   } catch (err) {
-    logger.error(
-      { err, sessionId, key, ttlSeconds: ACTIONS_TTL_SECONDS },
-      "Failed to cache personalization actions",
-    );
+    logger.error({ err, sessionId, ttlSeconds: ACTIONS_TTL_SECONDS }, "Failed to cache personalization actions");
   }
 
   return {
