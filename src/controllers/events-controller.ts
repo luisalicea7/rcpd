@@ -14,6 +14,8 @@ import {
 import { publishEvent } from "../services/event-producer.js";
 import { backstageManager } from "../services/backstage-manager.js";
 import { getProductById } from "../services/product-service.js";
+import { updateProfileFromEvent } from "../services/profile-service.js";
+import { getPersonalization } from "../services/personalization-service.js";
 import {
   EventType,
   type AddToCartEvent,
@@ -78,6 +80,46 @@ async function parseEventRequest<T extends z.ZodTypeAny>(
   return { sessionId, data: parsed.data };
 }
 
+const PERSONALIZATION_TRIGGER_EVENTS = new Set<EventType>([
+  EventType.PRODUCT_VIEW,
+  EventType.ADD_TO_CART,
+  EventType.REMOVE_FROM_CART,
+  EventType.SEARCH,
+]);
+
+async function updateProfileAndNotify(
+  sessionId: string,
+  streamId: string,
+  event: AppEvent,
+  eventType: EventType,
+): Promise<void> {
+  try {
+    const updatedProfile = await updateProfileFromEvent(event);
+    const topInterest = updatedProfile.interests.slice().sort((a, b) => b.score - a.score)[0];
+
+    backstageManager.emit("learn", {
+      sessionId,
+      eventId: streamId,
+      traceId: streamId,
+      payload: {
+        profileDelta: {
+          topCategory: topInterest?.category,
+          newInterestScore: topInterest?.score,
+          avgViewedPrice: updatedProfile.priceStats?.avg,
+          abandonmentRisk: updatedProfile.abandonmentRisk.score,
+        },
+        profile: updatedProfile,
+      },
+    });
+
+    if (PERSONALIZATION_TRIGGER_EVENTS.has(eventType)) {
+      await getPersonalization(sessionId, streamId);
+    }
+  } catch (err) {
+    logger.warn({ err, sessionId: redactSessionId(sessionId) }, "Background profile update failed");
+  }
+}
+
 async function publishOr503(
   c: Context,
   sessionId: string,
@@ -103,6 +145,9 @@ async function publishOr503(
         price: "price" in event ? event.price : undefined,
       },
     });
+
+    // Fire-and-forget: inline profile update + real-time push via WS
+    void updateProfileAndNotify(sessionId, streamId, event, eventType);
 
     return c.json({ ok: true, streamId, eventType }, 201);
   } catch (err) {

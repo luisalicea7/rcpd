@@ -319,6 +319,20 @@ export async function getPersonalization(
     logger.error({ err, sessionId, ttlSeconds: ACTIONS_TTL_SECONDS }, "Failed to cache personalization actions");
   }
 
+  // Summary emit — carries full ranked actions list for real-time frontend push
+  backstageManager.emit("explain", {
+    sessionId,
+    eventId: `summary_${sessionId}_${currentTs}`,
+    traceId: correlationTraceId,
+    payload: {
+      title: "personalization_summary",
+      reason: "all_actions_resolved",
+      humanText: `${ranked.length} action${ranked.length !== 1 ? "s" : ""} active`,
+      action: { id: "summary", type: "summary", params: {} },
+      actions: ranked,
+    },
+  });
+
   return {
     sessionId,
     generatedAt: currentTs,
