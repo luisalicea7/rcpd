@@ -11,6 +11,7 @@ export const productSchema = z.object({
   priceRange: priceRangeSchema,
   tags: z.array(z.string().min(1)).default([]),
   stock: z.number().int().nonnegative(),
+  imageUrl: z.string().url().optional(),
 });
 
 export const productsSchema = z.array(productSchema);
@@ -27,7 +28,7 @@ export const productsQuerySchema = z
     minPrice: optionalNonNegativeNumber,
     maxPrice: optionalNonNegativeNumber,
     priceRange: priceRangeSchema.optional(),
-    limit: z.coerce.number().int().min(1).max(100).default(24),
+    limit: z.coerce.number().int().min(1).max(500).default(120),
     offset: z.coerce.number().int().min(0).default(0),
   })
   .refine(

@@ -7,6 +7,7 @@ export interface Product {
   priceRange: "budget" | "mid" | "premium";
   tags: string[];
   stock: number;
+  imageUrl?: string;
 }
 
 export interface CartItem {

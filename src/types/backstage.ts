@@ -20,6 +20,8 @@ export interface LearnPayload {
     avgViewedPrice?: number;
     abandonmentRisk: number;
   };
+  /** Full BehavioralProfile snapshot — used for real-time frontend push */
+  profile?: unknown;
 }
 
 export interface DecidePayload {
@@ -38,6 +40,8 @@ export interface ExplainPayload {
     type: string;
     params: Record<string, unknown>;
   };
+  /** Full ranked actions list — only present on the summary emit after all actions are resolved */
+  actions?: unknown[];
 }
 
 export interface BackstagePayloadByType {
@@ -47,7 +51,9 @@ export interface BackstagePayloadByType {
   explain: ExplainPayload;
 }
 
-export interface BackstageMessage<K extends BackstageMessageType = BackstageMessageType> {
+export interface BackstageMessage<
+  K extends BackstageMessageType = BackstageMessageType,
+> {
   type: K;
   sessionId: string;
   timestamp: string;
